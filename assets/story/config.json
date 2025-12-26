@@ -19,19 +19,19 @@
   "rewardImages": [
     {
       "name": "reward1.jpg",
-      "probability": 0.01
+      "probability": 0.005
     },
     {
       "name": "reward2.jpg",
-      "probability": 0.01
+      "probability": 0.005
     },
     {
       "name": "reward3.jpg",
-      "probability": 0.01
+      "probability": 0.005
     },
     {
       "name": "reward4.jpg",
-      "probability": 0.1
+      "probability": 0.0001
     }
   ]
 }
