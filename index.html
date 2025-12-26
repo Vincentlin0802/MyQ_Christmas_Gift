@@ -610,7 +610,7 @@
 /* 移动端样式 - 强制小尺寸 */
 @media (max-width: 768px) {
     #webcam-wrapper.show {
-        width: 15vw !important;    /* 基础宽度10vw */
+        width: 20vw !important;    /* 基础宽度10vw */
         aspect-ratio: 3/4 !important; /* 固定比例，高度自动 */
         height: auto !important;
         min-width: 30px !important; /* 最小30px，防止看不见 */
@@ -892,8 +892,8 @@ const CONFIG = {
         z: 55 // 初始摄像机距离
     },
     gestures: {
-        pinchThreshold: 0.05, // 捏合判定阈值
-        palmOpenThreshold: 0.35, // 手掌张开判定阈值
+        pinchThreshold: 0.04, // 捏合判定阈值
+        palmOpenThreshold: 0.3, // 手掌张开判定阈值
         sensitivity: 6.0 // 手势旋转灵敏度
     }
 };
@@ -1846,7 +1846,7 @@ function addPhotoToScene(texture, type = 'NORMAL', probability = 1) {
     if (navigator.mediaDevices?.getUserMedia) {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } 
+                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
             });
             video.srcObject = stream;
             
