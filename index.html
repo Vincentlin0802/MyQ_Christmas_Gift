@@ -1418,6 +1418,37 @@ waitForTreeComplete();
     this.mesh.scale.lerp(new THREE.Vector3(s,s,s), window.isSceneStarted ? 5*dt : 10*dt);
 }
 		}
+		// 创建程序化纹理 (Candy Cane)
+        function createTextures() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,128,128);
+            ctx.fillStyle = '#002244'; // 深海蓝（替换原#cc2200）
+            ctx.beginPath();
+            for(let i=-128; i<256; i+=32) {
+                ctx.moveTo(i, 0); ctx.lineTo(i+32, 128); ctx.lineTo(i+16, 128); ctx.lineTo(i-16, 0);
+            }
+            ctx.fill();
+            caneTexture = new THREE.CanvasTexture(canvas);
+            caneTexture.colorSpace = THREE.SRGBColorSpace;
+            caneTexture.wrapS = THREE.RepeatWrapping; caneTexture.wrapT = THREE.RepeatWrapping;
+            caneTexture.repeat.set(3, 3);
+        }
+		// ✅ 新增：雪花材质库 + 全局雪花系统变量
+const matLib = {
+    snowFlake: new THREE.PointsMaterial({
+        color: 0xffffff,          // 雪花白色
+        size: 0.8,                // 雪花基础大小
+        transparent: false,        // 开启透明
+        opacity: 0.9,             // 雪花透明度
+        blending: THREE.AdditiveBlending, // 叠加混合（更通透）
+        depthWrite: false,        // 解决透明粒子渲染层级问题
+        sizeAttenuation: true,    // 远近大小衰减（真实感）
+		alphaMap: createCircleTexture(), // 自定义圆形纹理
+        alphaTest: 0.5 // 剔除透明部分，只显示圆形
+    })
+};
 let snowSystem; // 全局雪花粒子系统引用
 		// 辅助函数：生成圆形纹理（无需外部图片）
 function createCircleTexture() {
