@@ -301,7 +301,7 @@
     }
     .freeze-tip {
         font-size: 24px;
-        margin-bottom: 3px;
+        margin-bottom: -2px;
     }
     .freeze-btn {
         padding: 15px 40px;
@@ -1254,7 +1254,7 @@ waitForTreeComplete();
         function setupEnvironment() {
             const pmremGenerator = new THREE.PMREMGenerator(renderer);
             pmremGenerator.compileEquirectangularShader();
-            scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.02).texture;
+            scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.01).texture;
         }
 
         function setupLights() {
