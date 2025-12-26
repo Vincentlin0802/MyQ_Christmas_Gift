@@ -1,0 +1,37 @@
+{
+  "images": [
+    "002.jpg",
+    "003.jpg",
+    "005.jpg",
+    "006.jpg",
+    "007.jpg",
+    "008.jpg",
+    "010.jpg",
+    "013.jpg",
+    "021.jpg",
+    "022.jpg",
+    "024.jpg",
+    "026.jpg",
+    "039.jpg",
+    "041.jpg",
+    "045.jpg"
+  ],
+  "rewardImages": [
+    {
+      "name": "reward1.jpg",
+      "probability": 0.01
+    },
+    {
+      "name": "reward2.jpg",
+      "probability": 0.01
+    },
+    {
+      "name": "reward3.jpg",
+      "probability": 0.01
+    },
+    {
+      "name": "reward4.jpg",
+      "probability": 0.1
+    }
+  ]
+}

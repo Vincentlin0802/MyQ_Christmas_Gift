@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 核心修改：优化视口配置，兼容PC+移动端 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- 新增：移动端全屏/状态栏适配 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<title>MyQ撞球的聖誕樹之旅</title>
+
+	<!-- ========== 这里添加GA4统计代码（核心位置） ========== -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DF0B0FT8TB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-DF0B0FT8TB'); // 替换成你的GA4测量ID
+    </script>
+    <!-- ========== GA4代码结束 ========== -->
+    <style>
+    /* 引入衬线字体，营造高级感 */
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap');
+
+    /* 全局变量：统一金色和字体 */
+    :root {
+         --gold-primary: #aaddff;    /* 浅冰蓝 */
+        --gold-secondary: #00ffff;  /* 冰青色 */
+        --gold-dark: #002244;       /* 深海蓝 */
+        --font-main: 'Cinzel', serif;
+		--mobile-breakpoint: 768px;
+    }
+
+    /* 全局基础设置 */
+    body { 
+        margin: 0; 
+        overflow: hidden; 
+        background-color: #000; 
+        font-family: var(--font-main); 
+        touch-action: none; /* 禁止默认触摸行为 */
+        -webkit-user-select: none; 
+        user-select: none; 
+		width: 100vw;
+    	height: 100vh;
+    }
+		/* PC端body样式（屏幕>768px） */
+@media (min-width: 769px) {
+    body {
+        touch-action: none; /* PC端禁用触摸行为 */
+    }
+}
+
+/* 移动端body样式（屏幕≤768px） */
+@media (max-width: 768px) {
+    body {
+        touch-action: manipulation; /* 移动端优化触摸，禁用双击缩放 */
+        -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+    }
+}
+
+    /* 标题 - 通用样式 */
+#title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-main);
+    color: var(--gold-primary);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 25px var(--gold-primary), 0 0 5px var(--gold-dark); /* 熔岩发光阴影 */
+    font-weight: bold;
+    z-index: 1000;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease-in-out;
+}
+
+.title-logo {
+    height: auto; /* 保持比例 */
+    border-radius: 4px;
+    object-fit: contain;
+    transition: all 0.3s ease; /* 尺寸变化时平滑过渡 */
+}
+
+/* 标题 - PC端 */
+@media (min-width: 769px) {
+    #title {
+        top: 15px;
+        font-size: 30px;
+        letter-spacing: 2px;
+    }
+    .title-logo {
+        width: 130px;
+    }
+    :fullscreen .title-logo {
+        width: 150px;
+    }
+}
+
+/* 标题 - 移动端（统一放大，修复冲突） */
+@media (max-width: 768px) {
+    #title {
+        top: 2vw; /* 保留顶部边距，适配手机 */
+        font-size: 5vw; /* 从3vw放大到5vw，标题更醒目 */
+        letter-spacing: 0.5vw; /* 字母间距略放大，视觉更舒展 */
+        line-height: 1.2; /* 新增：避免文字换行重叠 */
+    }
+    .title-logo {
+        width: 20vw; /* 核心：从冲突的35vw/50px统一为20vw（放大且适配） */
+        max-width: 120px; /* 新增：限制最大宽度，避免大屏手机logo过大 */
+    }
+    :fullscreen .title-logo {
+        width: 22vw; /* 全屏时logo再放大一点，适配全屏场景 */
+        max-width: 150px;
+    }
+}
+    /* WebGL 容器 */
+    #canvas-container { 
+        width: 100vw; height: 100vh; 
+        position: absolute; top: 0; left: 0; 
+        z-index: 1; 
+    }
+    
+    /* UI 交互层 (允许点击穿透) */
+    #ui-layer {
+        position: absolute; top: 0; left: 0; 
+        width: 100%; height: 100%;
+        z-index: 10; 
+        pointer-events: none; 
+        background: radial-gradient(circle at center, transparent 0%, rgba(0,34,68,0.7) 100%);
+    }
+
+   /* 操作说明 - 通用样式 */
+#ui-layer2 {
+    position: absolute;
+    z-index: 1000;
+    font-family: var(--font-main);
+    color: var(--gold-primary);
+    line-height: 1.6;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1s ease-in-out; 
+}
+
+/* 操作说明 - PC端 */
+@media (min-width: 769px) {
+    #ui-layer2 {
+        bottom: 20px;
+        left: 20px;
+        font-size: 16px;
+    }
+}
+
+/* 操作说明 - 移动端 */
+@media (max-width: 768px) {
+    #ui-layer2 {
+        bottom: 3vw;
+        left: 3vw;
+        font-size: 3.0vw;
+        max-width: 80%; /* 防止文字溢出 */
+    }
+}
+
+/* 显示状态 - 通用 */
+#title.show, #ui-layer2.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+    
+    /* 启动按钮基础样式（核心修复：hover 失效问题） */
+/* 启动按钮基础样式（临时恢复可见性） */
+/* 普通状态 */
+/* 启动按钮 - 通用样式 */
+#start-btn {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-secondary) 100%);
+    color: var(--gold-dark);
+    border: 2px solid var(--gold-secondary);
+    border-radius: 16px;
+    font-weight: 600;
+    font-family: var(--font-main);
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,255,255,0.6);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: all 0.3s ease;
+    display: none; /* 初始隐藏 */
+}
+
+/* 启动按钮 - PC端 */
+@media (min-width: 769px) {
+    #start-btn {
+        bottom: 50px;
+        padding: 22px 48px;
+        font-size: 20px;
+        border-radius: 16px;
+    }
+    #start-btn:hover {
+        background: linear-gradient(135deg, #bbeeff 0%, #00e6e6 100%);
+        box-shadow: 0 8px 25px rgba(170,221,255,0.6);
+        transform: translateX(-50%) translateY(-3px);
+    }
+    #start-btn:active {
+        transform: translateX(-50%) translateY(1px) scale(0.95);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+}
+
+/* 启动按钮 - 移动端 */
+@media (max-width: 768px) {
+    #start-btn {
+        bottom: 6vw;
+        padding: 3vw 7vw;
+        font-size: 3.5vw;
+        border-radius: 3.5vw;
+    }
+    #start-btn:hover, #start-btn:active {
+        background: linear-gradient(135deg, #bbeeff 0%, #00e6e6 100%);
+        box-shadow: 0 8px 25px rgba(170,221,255,0.6);
+        transform: translateX(-50%) translateY(-0.8vw);
+    }
+    #start-btn:active {
+        transform: translateX(-50%) translateY(0.4vw) scale(0.95);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+}
+		
+/* 继续按钮 hover 通用 */
+#continueBtn:hover {
+  background: #00ffff;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #aaddff;
+}
+
+/* 奖励冻结层 - 通用样式 */
+/* 冻结提示容器 - 通用默认样式（核心：默认隐藏） */
+#rewardFreezeOverlay {
+    /* 默认完全隐藏，不占布局空间 */
+    display: none !important;
+    /* 备选方案（若需要占空间但透明）：display: flex; opacity: 0; pointer-events: none; */
+    position: fixed; /* 新增：固定定位，避免影响页面布局 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999; /* 确保层级足够，显示时在最上层 */
+    box-sizing: border-box;
+}
+
+/* 冻结提示文字 - 通用样式 */
+.freeze-tip {
+    color: #aaddff;
+    font-family: 'Cinzel', serif;
+    text-shadow: 0 0 10px #00ffff;
+    letter-spacing: 1px !important;
+    margin-bottom: 6vw;
+    padding: 2vw 0;
+    text-align: center;
+}
+
+/* 继续按钮 - 通用样式 */
+.freeze-btn {
+    background: #aaddff;
+    color: #002244;
+    border: none;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 0 15px #aaddff;
+    transition: all 0.3s ease;
+    max-width: 80vw;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 继续按钮 hover/active 通用效果 */
+.freeze-btn:hover {
+    background: #00ffff;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #aaddff;
+}
+
+/* ========== PC端样式（屏幕>768px） ========== */
+@media (min-width: 769px) {
+    #rewardFreezeOverlay.show { /* 仅当加.show类时显示 */
+        display: flex !important;
+        justify-content: flex-end;
+        align-items: center;
+        flex-direction: column;
+        padding-bottom: 100px;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .freeze-tip {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    .freeze-btn {
+        padding: 15px 40px;
+        font-size: 20px;
+        border-radius: 8px;
+    }
+}
+
+/* ========== 移动端样式（屏幕≤768px） ========== */
+@media (max-width: 768px) {
+    #rewardFreezeOverlay.show { /* 仅当加.show类时显示 */
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding-bottom: 0;
+        min-height: 100vh;
+    }
+    .freeze-tip {
+        font-size: 5vw;
+        margin-bottom: 8vw;
+        font-weight: 700;
+        margin-top: 105vw;
+        transform: none;
+    }
+    .freeze-btn {
+        padding: 3vw 8vw;
+        font-size: 4vw;
+        border-radius: 2vw;
+        width: 40vw;
+        margin-top: -5vw;
+        transform: none;
+    }
+}
+
+/* 奖励提示 - 通用样式（保留视觉效果） */
+.reward-tip {
+  text-align: center;
+  font-weight: 800;
+  color: #fff9c4;
+  text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700, 0 0 15px #ffd700, 0 0 20px #ffd700, 0 2px 2px #000;
+  -webkit-text-stroke: 0.5px #ffc107;
+  font-family: 'Cinzel', serif;
+  background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 80%);
+  padding: 25px 60px;
+  border-radius: 12px;
+  letter-spacing: 1.5px;
+  transition: opacity 0.3s ease;
+}
+
+/* 奖励提示文字 - PC端（原有大小） */
+@media (min-width: 769px) {
+  .reward-tip-text {
+    font-size: 38px !important; /* PC端保留38px */
+    display: block;
+  }
+  .reward-tip {
+    padding: 25px 60px;
+    letter-spacing: 1.5px;
+    border-radius: 12px;
+    -webkit-text-stroke: 0.5px #ffc107;
+  }
+}
+
+/* 奖励提示文字 - 移动端（缩小字体） */
+@media (max-width: 768px) {
+  .reward-tip-text {
+    font-size: 9vw !important; /* 相对单位，适配所有手机（约20-28px） */
+    display: block;
+  }
+  .reward-tip {
+    padding: 5px 10px; /* 内边距同步缩小 */
+    letter-spacing: 1px; /* 字间距缩小 */
+    border-radius: 8px; /* 圆角适配小尺寸 */
+    -webkit-text-stroke: 0.3px #ffc107; /* 描边变细，适配小字体 */
+    /* 可选：限制最大字体，避免大屏手机过大 */
+    max-width: 90%;
+  }
+}		
+    /* Loading 动画 - 通用样式 */
+#loader {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: #002244;
+    z-index: 100;
+    display: flex; 
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center;
+    transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+    opacity: 1;
+}
+
+#loader.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95);
+}
+
+.spinner {
+    border: 3px solid rgba(170,221,255,0.2);
+    border-top: 3px solid var(--gold-primary);
+    border-radius: 50%; 
+    animation: spin 1.2s ease-in-out infinite;
+    position: relative;
+}
+
+.spinner::after {
+    content: '';
+    position: absolute;
+    border: 2px solid rgba(0,255,255,0.15);
+    border-top: 2px solid var(--gold-secondary);
+    border-radius: 50%;
+    animation: spin 0.8s ease-in-out reverse infinite;
+}
+
+.loader-text {
+    color: var(--gold-primary);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 80%;
+    opacity: 0.9;
+    font-family: var(--font-main);
+}
+
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+}
+
+/* Loading - PC端 */
+@media (min-width: 769px) {
+    #loader {
+        gap: 24px;
+    }
+    .spinner {
+        width: 60px;
+        height: 60px;
+    }
+    .spinner::after {
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+    }
+    .loader-text {
+        font-size: 16px;
+    }
+}
+
+/* Loading - 移动端 */
+@media (max-width: 768px) {
+    #loader {
+        gap: 5vw;
+    }
+    .spinner {
+        width: 15vw;
+        height: 15vw;
+    }
+    .spinner::after {
+        top: 1vw;
+        left: 1vw;
+        right: 1vw;
+        bottom: 1vw;
+    }
+    .loader-text {
+        font-size: 3.5vw;
+    }
+}
+
+    /* 右上角控制按钮组 - 通用样式 */
+#top-right-controls {
+    position: absolute;
+    z-index: 30; 
+    display: flex; 
+    flex-direction: column;
+    gap: 15px;
+    pointer-events: auto;
+}
+
+.control-btn {
+    background: rgba(0,34,68,0.8);
+    border: 1px solid rgba(170,221,255,0.6);
+    color: var(--gold-primary); 
+    width: 100px; 
+    height: auto;
+    padding: 10px 0;
+    border-radius: 12px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    font-family: var(--font-main);
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(170,221,255,0.2);
+    outline: none; 
+    -webkit-tap-highlight-color: transparent;
+}
+
+.control-btn:hover {
+    background: rgba(170,221,255,0.3);
+    border-color: rgba(0,255,255,0.8);
+    box-shadow: 0 0 20px rgba(0,255,255,0.4);
+    transform: scale(1.05); 
+    color: #fff;
+}
+
+
+.control-btn:active { 
+    transform: scale(0.95); 
+}
+
+/* 右上角按钮 - PC端 */
+@media (min-width: 769px) {
+    #top-right-controls {
+        top: 20px;
+        right: 20px;
+        gap: 15px;
+    }
+    .control-btn {
+        width: 100px;
+        padding: 10px 0;
+        font-size: 14px;
+        border-radius: 12px;
+    }
+}
+
+/* 右上角按钮 - 移动端 */
+@media (max-width: 768px) {
+    #top-right-controls {
+        top: 3vw;
+        right: 3vw;
+        gap: 2vw;
+    }
+    .control-btn {
+        width: 25vw;
+        padding: 2vw 0;
+        font-size: 3.5vw;
+        border-radius: 2vw;
+    }
+}
+
+    /* 隐藏的文件输入框 */
+#file-input { display: none; }
+
+/* 摄像头预览窗 - 通用样式 */
+
+#webcam-wrapper {
+    position: fixed !important; 
+    bottom: 3vw !important;
+    right: 3vw !important;
+    opacity: 0; 
+    pointer-events: none;
+    border: 1px solid rgba(170, 221, 255, 0.7) !important;
+    border-radius: 1.5vw !important;
+    background: #002244 !important; 
+    z-index: 9999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    /* 核心：强制限制最大尺寸，杜绝超大 */
+    max-width: 80px !important;  /* 手机端最大80px宽 */
+    max-height: 120px !important; /* 手机端最大120px高 */
+    overflow: hidden !important;  /* 防止内容溢出 */
+}
+
+#webcam-wrapper.show {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: scale(1) !important;
+}
+
+#webcam { display: none !important; }
+
+/* 关键：让预览画面适配wrapper尺寸，不撑大容器 */
+#webcam-preview {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important; /* 画面填充容器，不拉伸 */
+    transform: scaleX(-1) !important;
+}
+
+/* PC端样式（缩小版） */
+@media (min-width: 769px) {
+    #webcam-wrapper {
+        width: 150px !important;    /* 从200px缩小到150px（核心） */
+        height: 210px !important;   /* 按原3:4.2比例同步缩小（200:280=150:210） */
+        max-width: none !important; /* 取消PC端最大尺寸限制 */
+        max-height: none !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        border-radius: 6px !important; /* 圆角稍调大，适配小尺寸更协调 */
+    }
+}
+
+/* 移动端样式 - 强制小尺寸 */
+@media (max-width: 768px) {
+    #webcam-wrapper.show {
+        width: 10vw !important;    /* 基础宽度10vw */
+        aspect-ratio: 3/4 !important; /* 固定比例，高度自动 */
+        height: auto !important;
+        min-width: 30px !important; /* 最小30px，防止看不见 */
+        min-height: 40px !important;
+    }
+}
+		
+/* 下载按钮 - 通用样式 */
+.download-btn-container {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+.download-btn {
+    background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-secondary) 100%) !important;
+    color: var(--gold-dark) !important;
+    border: 1px solid var(--gold-secondary) !important;
+    cursor: pointer; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    position: relative; 
+    font-family: var(--font-main);
+}
+
+.download-btn:hover { 
+    background: linear-gradient(135deg, #ffe100 0%, #f7d100 100%) !important;
+}
+
+.close-btn {
+    background-color: rgba(0,0,0,0.5) !important;
+    color: var(--gold-primary) !important;
+    border: none; 
+    border-radius: 50%;
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    position: absolute; 
+    top: 50%; 
+    transform: translateY(-50%);
+    line-height: 1;
+}
+
+/* 下载按钮 - PC端 */
+@media (min-width: 769px) {
+    .download-btn-container {
+        bottom: 20px;
+    }
+    .download-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        padding-right: 35px;
+        border-radius: 5px;
+    }
+    .close-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 14px;
+        right: 8px;
+    }
+}
+
+/* 下载按钮 - 移动端 */
+@media (max-width: 768px) {
+    .download-btn-container {
+        bottom: 3vw;
+    }
+    .download-btn {
+        padding: 2vw 4vw;
+        font-size: 3.5vw;
+        padding-right: 8vw;
+        border-radius: 1vw;
+    }
+    .close-btn {
+        width: 6vw;
+        height: 6vw;
+        font-size: 4vw;
+        right: 2vw;
+    }
+}
+
+/* 通用样式 */
+.hidden { display: none !important; }
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+/* ========== 新增：加载进度条样式 ========== */
+    #loadingProgressContainer {
+    width: 80%; /* 适配loader宽度，PC/移动端自适应 */
+    max-width: 400px; /* 限制最大宽度 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+/* 进度条填充层：保留你的金色渐变，调整尺寸 */
+#loadingProgressBar {
+    width: 0%; 
+    height: 100%;
+    background: linear-gradient(90deg, #aaddff 0%, #00ffff 100%);
+    transition: width 0.5s ease-in-out;
+    border-radius: 3px;
+}
+
+/* 进度条背景（新增，补全进度条容器） */
+#loadingProgressContainer::before {
+    content: '';
+    width: 100%;
+    height: 6px;
+    background: rgba(170,221,255,0.15);
+    border-radius: 3px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* 百分比文本：保留金色、阴影，调整定位 */
+#loadingProgressText {
+    color: #aaddff; 
+    font-size: 12px; 
+    font-family: 'Cinzel', serif; 
+    text-shadow: 0 0 5px #00ffff;
+    text-align: center;
+}
+
+/* 进度条响应式适配（基于你的原有规则调整） */
+@media (max-width: 768px) {
+    #loadingProgressText { font-size: 3vw !important; }
+    #loadingProgressContainer::before { height: 4px !important; } /* 移动端进度条高度 */
+}
+@media (min-width: 769px) {
+    #loadingProgressText { font-size: 14px !important; }
+    #loadingProgressContainer::before { height: 6px !important; } /* PC端进度条高度 */
+}
+    
+</style>
+
+	<!-- 2. GSAP 库引入（新增，放在样式之后、业务JS之前） -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+                "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/+esm"
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <!-- 加载遮罩容器 -->
+<div id="loader">
+    <div class="spinner"></div>
+    <div class="loader-text">
+        初始載入需讀取圖片內容，敬請稍候
+    </div>
+    <!-- 进度条容器（嵌入loader内部，不再是顶部fixed） -->
+    <div id="loadingProgressContainer" class="progress-container">
+        <div id="loadingProgressBar" class="progress-bar-fill"></div>
+        <div id="loadingProgressText" class="progress-text">0%</div>
+    </div>
+</div>
+
+
+    <div id="canvas-container"></div>
+    <!-- 标题 -->
+<div id="title">
+    <img id="uploaded-image" src="" alt="Uploaded Image" class="title-logo",style="display: none;">
+    <span><br> Wish You Merry Christmas</span>
+</div>
+
+
+    <div id="ui-layer">
+        <div id="top-right-controls">
+            <button id="btn-fullscreen" class="control-btn">全屏模式</button>
+        </div>
+    </div>
+	
+	<div id="ui-layer2">
+    <div class="instruction">✊→<b>握拳</b> 召喚聖誕樹</div>
+    <div class="instruction">✋→<b>開掌</b> 散開</div>
+	<div class="instruction">移動✋→<b>滑動手掌</b> 控制旋轉</div>
+    <div class="instruction">🤏→<b>捏合</b> 抓取禮物</div>
+</div>
+
+    <div id="webcam-wrapper">
+        <video id="webcam" autoplay playsinline webkit-playsinline></video>
+        <canvas id="webcam-preview"></canvas>
+    </div>
+    <!-- 启动按钮：底部居中显示，金色主色调优化 -->
+<button id="start-btn">
+  開始挑戰 <!-- 小修正：原HOW改为OUR更通顺 -->
+</button>
+    <audio id="bg-music" autoplay loop >
+    <source src="./assets/music/How_XMAS_music.ogg" type="audio/ogg">
+</audio>
+	
+
+    <div class="download-btn-container" id="downloadContainer">
+        <button class="download-btn" onclick="downloadHTML()">
+            下载HTML文件
+            <button class="close-btn" onclick="closeDownloadBtn(event)" title="关闭">×</button>
+        </button>
+    </div>
+
+	<!-- ====================== 奖励冻结继续按钮 添加在这里 ====================== -->
+    <div id="rewardFreezeOverlay">
+    <div class="freeze-tip">📸 截圖時刻！點擊繼續</div>
+    <button id="continueBtn" class="freeze-btn">繼續遊戲</button>
+</div>
+
+	<script>
+        let loadingProgress = 0;
+        /**
+         * 更新加载进度（仅统计startBtn显示前的场景加载）
+         * @param {number} newProgress 目标进度（0-100）
+         * @param {string} text 进度描述
+         */
+        function updateLoadingProgress(newProgress, text = "") {
+            loadingProgress = Math.min(Math.max(newProgress, loadingProgress), 100);
+            const progressBar = document.getElementById('loadingProgressBar');
+            const progressText = document.getElementById('loadingProgressText');
+            
+            if (progressBar) progressBar.style.width = `${loadingProgress}%`;
+            if (progressText) progressText.textContent = `${loadingProgress}% - ${text}`;
+            
+            // 进度100%后隐藏进度条（和startBtn显示同步）
+            if (loadingProgress === 100) {
+                setTimeout(() => {
+                    const container = document.getElementById('loadingProgressContainer');
+                    if (container) {
+                        container.style.opacity = 0;
+                        setTimeout(() => container.style.display = 'none', 500);
+                    }
+                }, 800);
+            }
+        }
+        // 初始化进度
+        updateLoadingProgress(0);
+    </script>
+    <!-- ====================== 按钮添加结束 ====================== -->
+</body>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'; 
+        import { FilesetResolver, HandLandmarker, DrawingUtils } from '@mediapipe/tasks-vision';
+
+        // ==========================================
+        // 1. CONFIG: 全局配置参数 (方便调整)
+        // ==========================================
+        // ==========================================
+// 1. CONFIG: 全局配置参数 (方便调整)
+// ==========================================
+const CONFIG = {
+    colors: {
+        bg: 0x002244,        // 深海蓝（替换原0x120a00）
+        gold: 0xaaddff,      // 浅冰蓝（替换原0xff4500）
+        red: 0x00ffff,       // 冰青色（替换原0xcc2200）
+        green: 0x0088aa,     // 浅蓝绿（适配冰蓝系的绿色）
+        pink: 0xaaddff       // 浅冰蓝（替换原0xff8c69）
+    },
+    particles: {
+        count: 1800,      // 核心粒子数
+        dustCount: 1500,  // 氛围星尘数
+        treeHeight: 28,   // 树高
+        treeRadius: 9,     // 树底半径
+		snowCount: 4000   // ✅ 新增：雪花粒子数量
+    },
+    camera: {
+        z: 55 // 初始摄像机距离
+    },
+    gestures: {
+        pinchThreshold: 0.05, // 捏合判定阈值
+        palmOpenThreshold: 0.35, // 手掌张开判定阈值
+        sensitivity: 6.0 // 手势旋转灵敏度
+    }
+};
+
+// ==========================================
+// 新增：粒子归位状态管理（独立全局变量，不在CONFIG内部）
+// ==========================================
+const ANIMATION_STATE = {
+    treeSettleComplete: false, // 圣诞树粒子是否归位完成
+    settleCheckTime: 0,        // 开始检查归位的时间
+    settleThreshold: 0.1,     // 归位判定阈值（位置误差<0.01则完成）
+    settleDelay: 2000          // 等待归位的最大时间（2秒）
+};
+	// ==========================================
+// 新增：配置读取 + 本地图片加载函数
+// ==========================================
+/**
+ * 读取指定文件夹的 config.json
+ * @param {string} folderPath 文件夹路径（如 "./assets/title/"）
+ * @returns {Promise<Object>} 配置对象
+ */
+async function loadConfig(folderPath) {
+  try {
+    const response = await fetch(`${folderPath}config.json`);
+    if (!response.ok) throw new Error(`读取配置失败：${response.status}`);
+    return await response.json();
+  } catch (err) {
+    console.error('配置读取失败：', err);
+    return null;
+  }
+}
+
+/**
+ * 加载本地图片为THREE纹理
+ * @param {string} folderPath 文件夹路径
+ * @param {string} imgName 图片文件名
+ * @returns {Promise<THREE.Texture>} 纹理对象
+ */
+async function loadLocalTexture(folderPath, imgName) {
+  return new Promise((resolve, reject) => {
+    const imgPath = `${folderPath}${imgName}`;
+    new THREE.TextureLoader().load(
+      imgPath,
+      (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        resolve(texture);
+      },
+      undefined,
+      (err) => reject(`加载图片${imgPath}失败：${err}`)
+    );
+  });
+}
+
+/**
+ * 加载标题Logo（从 assets/title/config.json 读取）
+ */
+async function loadTitleLogo() {
+  const folderPath = "./assets/title/";
+  const config = await loadConfig(folderPath);
+  if (!config || !config.logo) return;
+
+  // 加载Logo到标题区
+  const logoImg = document.getElementById('uploaded-image');
+  logoImg.src = `${folderPath}${config.logo}`;
+  logoImg.style.display = 'inline-block';
+  console.log('标题Logo加载完成');
+}
+
+/**
+ * 加载皮头照片（从 assets/tip/config.json 读取）
+ */
+async function loadTipPhotos() {
+  const folderPath = "./assets/tip/";
+  const config = await loadConfig(folderPath);
+  if (!config || !config.images || config.images.length === 0) return;
+
+  // 遍历配置中的图片，生成皮头粒子
+  for (const imgName of config.images) {
+    try {
+      const texture = await loadLocalTexture(folderPath, imgName);
+      addTipPhotoAsParticles(texture); // 复用原有粒子生成函数
+      console.log(`皮头照片${imgName}加载完成`);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+
+/**
+ * 加载故事照片（适配奖励图片）
+ */
+async function loadStoryPhotos() {
+  const folderPath = "./assets/story/";
+  const config = await loadConfig(folderPath);
+  if (!config || (!config.images && !config.rewardImages)) return;
+
+  if (!window.photos) window.photos = [];
+
+  // 加载普通图片（原有逻辑）
+  if (config.images && config.images.length > 0) {
+    for (const imgName of config.images) {
+      try {
+        const texture = await loadLocalTexture(folderPath, imgName);
+        addPhotoToScene(texture, 'NORMAL', 1); 
+        console.log(`✅ 普通照片${imgName}加载完成，索引：${window.photos.length-1}`);
+      } catch (err) {
+        console.error(`❌ 加载普通照片${imgName}失败：`, err);
+      }
+    }
+  }
+
+  // 加载奖励图片（新增文件路径日志）
+if (config.rewardImages && config.rewardImages.length > 0) {
+  console.log(`📌 待加载奖励图片数量：${config.rewardImages.length}`); // 先打印数量
+  for (const rewardItem of config.rewardImages) {
+    try {
+      const { name: imgName, probability } = rewardItem;
+      const fullPath = folderPath + imgName;
+      console.log(`🔍 尝试加载奖励图片：${fullPath}`); // 打印完整路径
+      const validProb = Math.max(0, Math.min(1, probability || 0.1));
+      const texture = await loadLocalTexture(folderPath, imgName);
+      addPhotoToScene(texture, 'REWARD', validProb); 
+      const rewardIndex = window.photos.length - 1;
+      console.log(`🎉 奖励照片${imgName}加载完成，索引：${rewardIndex}，类型：${window.photos[rewardIndex].type}`);
+    } catch (err) {
+      console.error(`❌ 加载奖励照片${rewardItem.name}失败：`, err);
+    }
+  }
+}
+
+  // 最终校验：打印所有照片的索引+类型+名称
+  console.log('📸 所有照片列表：');
+  window.photos.forEach((photo, idx) => {
+    console.log(`索引${idx}：类型=${photo.type}，概率=${photo.probability}`);
+  });
+}
+
+        // ==========================================
+        // 2. STATE: 运行时状态管理
+        // ==========================================
+        const STATE = {
+            mode: 'TREE', // 当前模式: TREE | SCATTER | HEART | FOCUS
+            focusTarget: null, // 当前聚焦的对象 (Mesh)
+            currentPhotoIndex: -1, // 当前展示的照片索引
+            
+            // 交互输入数据
+            hand: { detected: false, x: 0, y: 0 },
+            mouse: { x: 0, y: 0 },
+            
+            // 动画状态
+            rotation: { x: 0, y: 0 },
+            spinVel: { x: 0, y: 0 }, // 旋转速度 (x: 仰俯, y: 左右)
+            time: 0,
+            
+            // 逻辑辅助
+            wasPointing: false, // 上一帧是否在指点
+            palmCenter: { x: 0.5, y: 0.5 }, // 手掌中心基准点
+            hasPalmCenter: false,
+            starMesh: null // 树顶星星的引用
+        };
+
+        // 全局变量
+        let scene, camera, renderer, composer;
+        let mainGroup, starGroup, bgGroup, photoMeshGroup;
+        let clock = new THREE.Clock();
+        let particleSystem = []; 
+        let handLandmarker, video, drawingUtils, canvasCtx;
+        let caneTexture; // 糖果拐杖纹理
+
+        // ==========================================
+        // 3. 初始化入口
+        // ==========================================
+        async function init() {
+	updateLoadingProgress(5);    // 初始化Three.js核心		
+    initThree();   
+			// 初始化 Three.js 场景
+	updateLoadingProgress(10);   // 环境贴图设置完成		
+    setupEnvironment();   // 设置环境贴图
+			
+	updateLoadingProgress(15);   // 灯光系统初始化完成		
+    setupLights();        // 设置灯光
+			
+	updateLoadingProgress(20);   // 程序化纹理生成完成		
+    createTextures();     // 生成程序化纹理
+
+	updateLoadingProgress(25);   // 星空背景创建完成		
+    createGalaxyBackground(); // 创建背景星空
+
+	createSnowBackground();	
+	updateLoadingProgress(30);   // 后期处理设置完成		
+    setupPostProcessing();// 设置辉光后期处理
+
+	updateLoadingProgress(35);   // DOM事件绑定完成		
+    setupEvents();        // 绑定 DOM 事件
+    
+    // 加载所有图片资源
+	updateLoadingProgress(40);   // 开始加载标题Logo		
+    await loadTitleLogo();   // 加载标题Logo
+
+	updateLoadingProgress(45);   // 开始加载皮头照片		
+    await loadTipPhotos();   // 加载皮头照片
+
+	updateLoadingProgress(60);   // 开始加载故事照片	
+    await loadStoryPhotos(); // 加载故事照片
+
+    // ========== 核心修改：等待圣诞树粒子完全创建 ==========
+	updateLoadingProgress(90);   // 开始创建圣诞树粒子		
+    await createParticles(); // 替换原来的同步调用，等粒子创建完
+
+	updateLoadingProgress(100);   // 开始创建圣诞树粒子				
+
+    // 移除 Loading 遮罩
+    const loader = document.getElementById('loader');
+    loader.style.opacity = 0;
+    setTimeout(() => loader.remove(), 1200);
+
+    // ========== 全局状态初始化 ==========
+    window.isSceneStarted = false; // 场景是否启动
+    window.mediaPipeInited = false; // 摄像头是否初始化
+    const startBtn = document.getElementById('start-btn');
+    const bgMusic = document.getElementById('bg-music');
+    const musicBtn = document.getElementById('music-play-btn');
+
+    // ========== 音乐播放函数 ==========
+    const playMusic = () => {
+        if (!bgMusic || !window.isSceneStarted) return;
+        bgMusic.volume = 0.5;
+        bgMusic.load();
+        bgMusic.play()
+            .then(() => {
+                console.log('背景音乐播放成功');
+                if (musicBtn) musicBtn.style.display = 'none';
+            })
+            .catch(e => {
+                console.error('音乐播放失败：', e);
+                if (musicBtn) musicBtn.style.display = 'block';
+            });
+    };
+
+    // ========== 摄像头初始化函数（点击后执行） ==========
+    const initCameraAndGesture = async () => {
+        if (window.mediaPipeInited) return; // 避免重复初始化
+        try {
+            await initMediaPipe(); // 请求摄像头权限
+            window.mediaPipeInited = true;
+            console.log('摄像头初始化成功，手势控制已开启');
+        } catch (e) {
+            console.warn('摄像头初始化失败：', e);
+            alert('请允许摄像头权限，否则无法使用手势控制！');
+        }
+    };
+
+    // ========== 启动按钮点击逻辑 ==========
+    startBtn.addEventListener('click', async () => {
+        startBtn.textContent = '請求相機使用權限中...';
+        startBtn.disabled = true; // 禁用按钮，避免重复点击
+
+		// ========== ✅ 新增：GA4统计「点击开始游戏」事件 ==========
+    if (window.gtag) { // 兼容：gtag未加载时不报错
+        gtag('event', 'game_start', {
+            event_category: '核心交互', // 事件分类（方便GA4后台筛选）
+            event_label: '点击Start按钮启动游戏', // 事件标签（描述行为）
+            value: 1 // 计数用，固定传1即可
+        });
+        console.log('📊 GA4：用户点击Start按钮，已上报game_start事件');
+    }
+    // ========== GA4代码结束 ==========
+        await initCameraAndGesture(); // 先请求摄像头权限
+        window.isSceneStarted = true; // 解锁动画/手势
+        startBtn.style.display = 'none'; // 隐藏按钮
+        playMusic(); // 播放音乐
+    });
+
+    // ========== 音乐兜底按钮 ==========
+    if (musicBtn) {
+        musicBtn.addEventListener('click', () => {
+            if (!window.isSceneStarted) {
+                alert('请先点击“开始体验”按钮启动场景！');
+                return;
+            }
+            playMusic();
+        });
+    }
+
+    // 替换init函数中原有的“延迟+渲染验证”代码
+// ========== 精准验证：粒子归位完成 + 渲染稳定后显示按钮 ==========
+const waitForTreeComplete = () => {
+    composer.render(); 
+
+    // 基础条件：粒子归位完成 + 粒子创建后至少1秒
+    const isReady = ANIMATION_STATE.treeSettleComplete && (clock.getElapsedTime() * 1000 - ANIMATION_STATE.settleCheckTime > 1000);
+    
+    if (isReady) {
+        // 核心修改：额外等待0.5秒，让视觉完全稳定
+        setTimeout(() => {
+            const startBtn = document.getElementById('start-btn');
+            if (startBtn) {
+               startBtn.style.setProperty('display', 'block', 'important');
+    startBtn.style.setProperty('pointer-events', 'auto', 'important');
+    startBtn.style.setProperty('z-index', '99999', 'important');
+            }
+			// 新增：显示标题和操作说明
+            document.getElementById('title').classList.add('show');
+            document.getElementById('ui-layer2').classList.add('show');
+            
+            console.log('✅ 圣诞树100%完整，启动按钮已显示！');
+        }, 800); // 0.5秒延迟，确保用户视觉上看到完整的树
+        return;
+    }
+
+    requestAnimationFrame(waitForTreeComplete);
+};
+
+// 粒子创建完成后，启动等待检查
+waitForTreeComplete();
+			animate();
+}
+        // ==========================================
+        // 4. Three.js 核心设置
+        // ==========================================
+        function initThree() {
+            const container = document.getElementById('canvas-container');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(CONFIG.colors.bg); // 深海蓝背景
+            scene.fog = new THREE.FogExp2(CONFIG.colors.bg, 0.012); 
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera.position.set(0, 0, CONFIG.camera.z); 
+
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: false, // 后期处理会负责抗锯齿
+                powerPreference: "high-performance",
+                stencil: false,
+                depth: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping; 
+            renderer.toneMappingExposure = 1.0; 
+            container.appendChild(renderer.domElement);
+
+            // 分组管理：背景组、主物体组、照片组
+            bgGroup = new THREE.Group();
+            scene.add(bgGroup);
+
+            mainGroup = new THREE.Group();
+            mainGroup.rotation.x = 0.1; // 初始轻微倾斜
+            scene.add(mainGroup);
+
+            starGroup = new THREE.Group();
+            mainGroup.add(starGroup);
+            
+            photoMeshGroup = new THREE.Group();
+            mainGroup.add(photoMeshGroup);
+        }
+
+        function setupEnvironment() {
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            pmremGenerator.compileEquirectangularShader();
+            scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+        }
+
+        function setupLights() {
+            const ambient = new THREE.AmbientLight(0xffffff, 0.2);
+            scene.add(ambient);
+
+            // 底部灯光：浅冰蓝
+            const bottomLight = new THREE.PointLight(CONFIG.colors.gold, 3, 40);
+            bottomLight.position.set(0, -10, 10);
+            mainGroup.add(bottomLight);
+
+            // 聚光灯1：冰青色
+            const spotGold = new THREE.SpotLight(0xaaffff, 800);
+            spotGold.position.set(40, 60, 40);
+            spotGold.angle = 0.4;
+            spotGold.penumbra = 0.5;
+            spotGold.decay = 2;
+            scene.add(spotGold);
+
+            // 聚光灯2：深海蓝
+            const spotBlue = new THREE.SpotLight(0x004488, 400);
+            spotBlue.position.set(-40, 10, -30);
+            spotBlue.lookAt(0,0,0);
+            scene.add(spotBlue);
+        }
+
+        function setupPostProcessing() {
+            const renderScene = new RenderPass(scene, camera);
+            // 辉光效果：阈值、强度、半径
+            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloomPass.threshold = 0.7; 
+            bloomPass.strength = 0.4; 
+            bloomPass.radius = 0.4;
+            
+            composer = new EffectComposer(renderer);
+            composer.addPass(renderScene);
+            composer.addPass(bloomPass);
+        }
+
+        // ==========================================
+        // 5. 粒子与内容创建
+        // ==========================================
+        
+        // 粒子类：封装每个粒子的行为逻辑
+        class Particle {
+            constructor(mesh, type, isDust = false) {
+                this.mesh = mesh;
+                this.type = type;
+                this.isDust = isDust;
+                
+                this.posTree = new THREE.Vector3();    // 树形态的目标位置
+                this.posScatter = new THREE.Vector3(); // 散开形态的目标位置
+                
+                // 动画属性
+                this.baseScale = mesh.scale.x; 
+                this.offset = Math.random() * 100; // 随机相位偏移
+                this.speed = 0.5 + Math.random();  // 摆动速度
+                
+                // 材质自发光备份
+                if (mesh.material && mesh.material.emissive) {
+                    this.baseEmissive = mesh.material.emissive.clone();
+                    this.hasEmissive = true;
+                }
+                
+                this.calculatePositions(); // 计算初始形态位置
+            }
+
+            // 计算该粒子在不同形态下的位置
+            calculatePositions() {
+                const h = CONFIG.particles.treeHeight;
+                let t = Math.random(); // 高度比例 0~1
+                
+                // --- 1. 计算树形态坐标 (Spiral Cone) ---
+                if (Math.random() > 0.7 && !this.isDust && this.type !== 'PHOTO') {
+                    // 核心树干部分 (更规则)
+                    const y = (t * h) - h/2;
+                    const rBase = CONFIG.particles.treeRadius * (1.0 - t);
+                    const angle = t * Math.PI * 2 * 6; // 螺旋圈数
+                    this.posTree.set(Math.cos(angle) * rBase, y, Math.sin(angle) * rBase);
+                } else {
+                    // 树冠填充部分 (更随机)
+                    t = Math.pow(t, 0.8); // 分布曲线调整
+                    const y = (t * h) - h/2;
+                    let rMax = CONFIG.particles.treeRadius * (1.0 - t); 
+                    if (rMax < 0.5) rMax = 0.5;
+                    const angle = Math.random() * Math.PI * 2;
+                    const r = rMax * Math.sqrt(Math.random()); 
+                    this.posTree.set(Math.cos(angle) * r, y, Math.sin(angle) * r);
+                }
+
+                // --- 2. 计算散开形态坐标 (Sphere Cloud) ---
+                let rScatter = this.isDust ? (15 + Math.random()*25) : (10 + Math.random()*15);
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                this.posScatter.set(
+                    rScatter * Math.sin(phi) * Math.cos(theta), 
+                    rScatter * Math.sin(phi) * Math.sin(theta), 
+                    rScatter * Math.cos(phi)
+                );
+            }
+
+            update(dt, time, mode, focusTargetMesh) {
+    let target = this.posTree;
+    let s = this.baseScale;
+    // 核心：未启动场景时，用最快速度插值（lerpSpeed=10）
+    let lerpSpeed = window.isSceneStarted ? 3.0 : 15.0; 
+
+    // 未启动场景时，强制树模式，忽略其他模式
+    if (!window.isSceneStarted) {
+        mode = 'TREE';
+    }
+
+    // 原有模式逻辑保留（启动后生效）
+    if (mode === 'SCATTER') {
+        target = this.posScatter;
+    } 
+    else if (mode === 'FOCUS') {
+        if (this.mesh === focusTargetMesh) {
+            const invMatrix = new THREE.Matrix4().copy(mainGroup.matrixWorld).invert();
+            const camPos = new THREE.Vector3(0, 0, CONFIG.camera.z - 15);
+            target = camPos.applyMatrix4(invMatrix);
+            lerpSpeed = 6.0;
+            this.mesh.lookAt(camera.position);
+            s = this.baseScale * 5.0;
+        } else {
+            target = this.posScatter;
+            s = 0.01;
+        }
+    } 
+    else if (mode === 'METEOR') {
+        target = this.posScatter; 
+        if (!this.isDust) s = 0;
+    }
+
+    // 未启动场景时，关闭噪声（避免粒子来回晃，卡住不动）
+    const dest = target.clone();
+    if(mode === 'TREE' && window.isSceneStarted) { 
+        const noiseY = Math.sin(time * this.speed + this.offset) * 0.15;
+        const noiseX = Math.cos(time * 0.5 * this.speed + this.offset) * 0.1;
+        dest.y += noiseY; dest.x += noiseX; 
+    }
+
+    // 位置插值（未启动时速度×10，快速归位）
+    this.mesh.position.lerp(dest, lerpSpeed * dt);
+
+    // 闪烁效果（未启动时关闭，避免干扰）
+    if (this.hasEmissive && mode === 'TREE' && !this.isDust && window.isSceneStarted) {
+        const blink = Math.sin(time * 2 + this.offset);
+        this.mesh.material.emissiveIntensity = blink > 0.5 ? (1.0 + (blink - 0.5) * 4) : 0.3;
+    }
+
+    // 缩放处理（未启动时固定尺寸，不晃）
+    if (mode !== 'FOCUS') {
+         if (this.isDust && window.isSceneStarted) {
+            s = this.baseScale * (0.5 + 0.5 * Math.sin(time * 3 + this.offset));
+        } else if (mode === 'SCATTER' && this.type === 'PHOTO') {
+            s = this.baseScale * 2.5;
+        }
+    }
+    
+    this.mesh.scale.lerp(new THREE.Vector3(s,s,s), window.isSceneStarted ? 5*dt : 10*dt);
+}
+		}
+
+        // 创建程序化纹理 (Candy Cane)
+        function createTextures() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,128,128);
+            ctx.fillStyle = '#002244'; // 深海蓝（替换原#cc2200）
+            ctx.beginPath();
+            for(let i=-128; i<256; i+=32) {
+                ctx.moveTo(i, 0); ctx.lineTo(i+32, 128); ctx.lineTo(i+16, 128); ctx.lineTo(i-16, 0);
+            }
+            ctx.fill();
+            caneTexture = new THREE.CanvasTexture(canvas);
+            caneTexture.colorSpace = THREE.SRGBColorSpace;
+            caneTexture.wrapS = THREE.RepeatWrapping; caneTexture.wrapT = THREE.RepeatWrapping;
+            caneTexture.repeat.set(3, 3);
+        }
+		// ✅ 新增：雪花材质库 + 全局雪花系统变量
+const matLib = {
+    snowFlake: new THREE.PointsMaterial({
+        color: 0xffffff,          // 雪花白色
+        size: 0.8,                // 雪花基础大小
+        transparent: false,        // 开启透明
+        opacity: 0.9,             // 雪花透明度
+        blending: THREE.AdditiveBlending, // 叠加混合（更通透）
+        depthWrite: false,        // 解决透明粒子渲染层级问题
+        sizeAttenuation: true,    // 远近大小衰减（真实感）
+		alphaMap: createCircleTexture(), // 自定义圆形纹理
+        alphaTest: 0.5 // 剔除透明部分，只显示圆形
+    })
+};
+let snowSystem; // 全局雪花粒子系统引用
+		// 辅助函数：生成圆形纹理（无需外部图片）
+function createCircleTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    // 画圆形
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(32, 32, 30, 0, Math.PI * 2);
+    ctx.fill();
+    // 转为Three.js纹理
+    const texture = new THREE.CanvasTexture(canvas);
+    return texture;
+}
+        // 创建背景银河粒子
+        function createGalaxyBackground() {
+            const geometry = new THREE.BufferGeometry();
+            const count = 3000;
+            const positions = new Float32Array(count * 3);
+            const sizes = new Float32Array(count);
+            const colors = new Float32Array(count * 3);
+            const c1 = new THREE.Color(0xaaffff);  // 浅冰蓝
+            const c2 = new THREE.Color(0x00ffff);  // 冰青色
+            const c3 = new THREE.Color(0x002244);  // 深海蓝 
+
+            for(let i=0; i<count; i++) {
+                const r = 60 + Math.random() * 250;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                positions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+                positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+                positions[i*3+2] = r * Math.cos(phi);
+                sizes[i] = Math.random() * 2.0;
+                let c = Math.random(); let finalC = c < 0.6 ? c2 : (c < 0.9 ? c1 : c3);
+                colors[i*3] = finalC.r; colors[i*3+1] = finalC.g; colors[i*3+2] = finalC.b;
+            }
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            
+            const material = new THREE.PointsMaterial({
+                size: 1.0, transparent: true, opacity: 0.8, vertexColors: true,
+                sizeAttenuation: true, blending: THREE.AdditiveBlending, depthWrite: false
+            });
+            bgGroup.add(new THREE.Points(geometry, material));
+        }
+
+		// ✅ 新增：创建下雪背景粒子系统
+function createSnowBackground() {
+    try {
+        // 1. 确认函数被调用 + 打印CONFIG配置（核心排查）
+        console.log('===== 开始创建雪花系统 =====');
+        console.log('CONFIG是否存在:', typeof CONFIG !== 'undefined' ? '✅ 存在' : '❌ 不存在');
+        console.log('CONFIG.particles:', CONFIG?.particles);
+        console.log('雪花数量配置 snowCount:', CONFIG?.particles?.snowCount);
+
+        // 2. 兜底处理：如果CONFIG未定义/值异常，强制设为2500
+        const count = CONFIG?.particles?.snowCount || 2500;
+        console.log('最终使用的雪花数量:', count);
+
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(count * 3);
+        const velocities = new Float32Array(count); // 每个雪花的下落速度
+        const sizes = new Float32Array(count);      // 每个雪花的大小
+
+        // 3. 初始化雪花数据时打印进度（验证循环执行）
+        console.log('开始初始化雪花位置/速度/大小...');
+        for (let i = 0; i < count; i++) {
+            positions[i * 3] = (Math.random() - 0.5) * window.innerWidth;  // X轴：-100 ~ 100
+            positions[i * 3 + 1] = (Math.random() * 100) + 50; // Y轴：50 ~ 150（从顶部开始）
+            positions[i * 3 + 2] = -50+(Math.random() - 0.5) * 100; // Z轴：-75 ~ 75
+            
+            velocities[i] = 1.0 + Math.random() * 2; // 下落速度：1 ~ 3
+            sizes[i] = 0.5 + Math.random() * 1.5;    // 雪花大小：0.5 ~ 2
+
+            // 4. 打印前3个雪花的初始化数据（验证数据是否正常）
+            if (i < 3) {
+                console.log(`雪花${i}初始化数据:`, {
+                    position: [positions[i*3], positions[i*3+1], positions[i*3+2]],
+                    velocity: velocities[i],
+                    size: sizes[i]
+                });
+            }
+        }
+
+        // 5. 绑定几何体属性后打印几何体信息
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 1));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        console.log('雪花几何体创建完成:', geometry);
+        console.log('几何体顶点数量:', geometry.attributes.position.count);
+
+        // 6. 创建雪花粒子系统并验证
+        console.log('雪花材质 matLib.snowFlake:', matLib?.snowFlake);
+        snowSystem = new THREE.Points(geometry, matLib.snowFlake);
+        snowSystem.visible = true; // 默认开启下雪
+        console.log('雪花粒子系统创建完成:', snowSystem);
+        console.log('雪花系统是否可见:', snowSystem.visible);
+
+        // 7. 验证bgGroup并添加，打印结果
+        console.log('背景组 bgGroup 是否存在:', typeof bgGroup !== 'undefined' ? '✅ 存在' : '❌ 不存在');
+        if (bgGroup) {
+            bgGroup.add(snowSystem);
+            console.log('✅ 雪花系统已成功添加到bgGroup！');
+            console.log('bgGroup子元素数量:', bgGroup.children.length);
+        } else {
+            console.error('❌ 无法添加雪花到bgGroup：bgGroup未定义！');
+        }
+
+        console.log('===== 雪花系统创建流程结束 =====');
+    } catch (error) {
+        // 8. 捕获所有错误，避免函数崩溃，同时打印详细错误信息
+        console.error('❌ 创建雪花系统时发生错误：', error);
+        console.error('错误位置:', error.stack);
+    }
+}
+
+        // 创建主粒子系统
+        function createParticles() {
+    // 返回Promise，让init()能等待粒子全部创建完成
+    return new Promise((resolve) => {
+        const sphereGeo = new THREE.SphereGeometry(0.5, 32, 32); 
+        const boxGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45); 
+        // 糖果形状
+        const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, -0.5, 0), new THREE.Vector3(0, 0.3, 0), new THREE.Vector3(0.1, 0.5, 0), new THREE.Vector3(0.3, 0.4, 0)]);
+        const candyGeo = new THREE.TubeGeometry(curve, 16, 0.08, 8, false);
+
+        // 冰蓝系材质库
+        const goldMat = new THREE.MeshStandardMaterial({ 
+            color: CONFIG.colors.gold, // 浅冰蓝
+            metalness: 1.0, 
+            roughness: 0.15, 
+            envMapIntensity: 2.5, 
+            emissive: 0x004488, // 深海蓝自发光
+            emissiveIntensity: 0.4 
+        });
+        const greenMat = new THREE.MeshStandardMaterial({ 
+            color: CONFIG.colors.green, // 浅蓝绿
+            metalness: 0.4, 
+            roughness: 0.3, 
+            emissive: 0x002244, // 深海蓝自发光
+            emissiveIntensity: 0.2 
+        });
+        const redMat = new THREE.MeshPhysicalMaterial({ 
+            color: CONFIG.colors.red, // 冰青色
+            metalness: 0.6, 
+            roughness: 0.2, 
+            clearcoat: 1.0, 
+            emissive: 0x0088aa, // 浅蓝绿自发光
+            emissiveIntensity: 0.6 
+        });
+        const candyMat = new THREE.MeshStandardMaterial({ 
+            map: caneTexture, 
+            roughness: 0.3, 
+            metalness: 0.1, 
+            emissive: 0x002244 // 深海蓝自发光
+        });
+        
+        const dustGeo = new THREE.OctahedronGeometry(0.1, 0);
+        const dustMat = new THREE.MeshBasicMaterial({ 
+            color: CONFIG.colors.gold, // 浅冰蓝
+            blending: THREE.AdditiveBlending 
+        });
+
+        // 1. 生成主体装饰
+        for (let i = 0; i < CONFIG.particles.count; i++) {
+            const rand = Math.random(); 
+            let mesh, type;
+            if (rand < 0.35) { mesh = new THREE.Mesh(boxGeo, greenMat); type = 'BOX'; } 
+            else if (rand < 0.70) { mesh = new THREE.Mesh(boxGeo, goldMat); type = 'GOLD_BOX'; } 
+            else if (rand < 0.90) { mesh = new THREE.Mesh(sphereGeo, goldMat); type = 'GOLD_SPHERE'; } 
+            else if (rand < 0.96) { mesh = new THREE.Mesh(sphereGeo, redMat); type = 'RED'; } 
+            else { mesh = new THREE.Mesh(candyGeo, candyMat); type = 'CANE'; }
+            
+            const s = 0.4 + Math.random() * 0.4;
+            mesh.scale.set(s,s,s);
+            mesh.rotation.set(Math.random()*6, Math.random()*6, Math.random()*6);
+            mainGroup.add(mesh);
+            particleSystem.push(new Particle(mesh, type, false));
+        }
+
+        // 2. 生成星尘
+        for(let i=0; i<CONFIG.particles.dustCount; i++) {
+            const mesh = new THREE.Mesh(dustGeo, dustMat);
+            mesh.scale.setScalar(0.5 + Math.random());
+            mainGroup.add(mesh);
+            particleSystem.push(new Particle(mesh, 'DUST', true));
+        }
+
+        // 3. 树顶星星（确保星星也创建完成）
+        createStarTopper();
+
+        // ========== 关键：等待粒子数据上传GPU后，标记创建完成 ==========
+        // 200ms延迟：给Three.js时间把粒子几何体/材质上传到GPU（渲染前的关键步骤）
+        setTimeout(() => {
+            console.log(`圣诞树粒子创建完成：主体装饰${CONFIG.particles.count}个 + 星尘${CONFIG.particles.dustCount}个 + 树顶星星`);
+            resolve(true); // 告诉init()：粒子全部创建好了
+        }, 1000);
+    });
+}
+        function createStarTopper() {
+            const starGeo = new THREE.OctahedronGeometry(1.5, 0);
+            const starMat = new THREE.MeshStandardMaterial({ 
+                color: 0xaaffff, // 浅冰蓝
+                emissive: 0x00ffff, // 冰青色自发光
+                emissiveIntensity: 2.5, 
+                metalness: 1.0, 
+                roughness: 0 
+            });
+            const star = new THREE.Mesh(starGeo, starMat);
+            star.position.set(0, CONFIG.particles.treeHeight/2 + 1.2, 0);
+            
+            // 简单光晕 Sprite
+            const halo = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshBasicMaterial({ 
+                map: new THREE.TextureLoader().load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/sprites/glow.png'), 
+                blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5, color: 0xff4500
+            }));
+            star.add(halo);
+            starGroup.add(star);
+            STATE.starMesh = star;
+        }
+
+        // ==========================================
+        // 6. 照片上传与处理
+        // ==========================================
+function addTipPhotoAsParticles(texture) {
+    // 1. 容错：纹理/纹理图片不存在则返回（和 addPhotoToScene 一致）
+    const img = texture.image;
+    if (!img || !texture) return;
+
+    // 2. 粒子基础配置（可自定义）
+    const particleCount = 50;  // 每张图片生成100个粒子
+    const cylinderRadius = 0.3; // 圆柱半径
+    const cylinderHeight = 0.2; // 圆柱高度（短圆柱）
+    const scaleFactor = 4;      // 粒子缩放系数
+
+    // 3. 循环生成粒子（核心逻辑）
+    for (let i = 0; i < particleCount; i++) {
+        // 3.1 创建短圆柱几何体（你的原配置）
+        const geometry = new THREE.CylinderGeometry(
+            cylinderRadius,  // 顶部半径
+            cylinderRadius,  // 底部半径
+            cylinderHeight,  // 高度
+            32               // 分段数（越高铁柱越圆）
+        );
+
+        // 3.2 创建材质（模仿相框的金属质感 + 透明/纹理配置）
+        const material = new THREE.MeshStandardMaterial({
+            map: texture,               // 绑定皮头照片纹理
+            transparent: true,          // 开启透明（避免遮挡）
+            depthWrite: false,          // 解决透明渲染层级问题
+            metalness: 0.7,             // 模仿相框的高金属感（原0.9→1.0更贴近）
+            roughness: 0.4,             // 低粗糙度=高光泽（原0.6→0.2更贴近相框）
+			flatShading: true,
+            emissiveIntensity: 0.3     // 微弱自发光
+        });
+
+        // 3.3 创建圆柱粒子网格
+        const particleMesh = new THREE.Mesh(geometry, material);
+
+        // 3.4 粒子位置（模仿照片的尺寸适配思路，限定位置范围，避免太分散）
+        // 皮头粒子专属区域：X轴 5~10，Y/Z轴 -5~5（和普通粒子区分）
+        particleMesh.position.set(
+            Math.random() * 5 + 5,    // X: 5~10
+            Math.random() * 10 - 5,   // Y: -5~5
+            Math.random() * 10 - 5    // Z: -5~5
+        );
+
+        // 3.5 粒子旋转（随机角度）
+        particleMesh.rotation.set(
+            Math.random() * Math.PI,
+            Math.random() * Math.PI,
+            Math.random() * Math.PI
+        );
+
+        // 3.6 粒子缩放（模仿照片的尺寸限制，避免过大/过小）
+        particleMesh.scale.set(
+            Math.random() * scaleFactor + 1,
+            Math.random() * scaleFactor + 1,
+            Math.random() * scaleFactor + 1
+        );
+
+        // 3.7 透明度（固定1，也可随机）
+        material.opacity = 1;
+
+        // 4. 加入场景（和 addPhotoToScene 的 photoMeshGroup 逻辑一致）
+        // 建议创建专属的粒子组，方便管理（和照片组区分）
+        if (!window.tipParticleGroup) {
+            window.tipParticleGroup = new THREE.Group(); // 皮头粒子总容器
+            mainGroup.add(window.tipParticleGroup);      // 加入主场景
+        }
+        window.tipParticleGroup.add(particleMesh);
+
+        // 5. 加入粒子系统（和 addPhotoToScene 一致）
+        if (typeof particleSystem !== 'undefined' && typeof Particle === 'function') {
+            particleSystem.push(new Particle(particleMesh, 'TIP_PARTICLE', false));
+        }
+    }
+
+    // 日志：粒子生成成功
+    console.log(`皮头照片粒子生成完成！共生成 ${particleCount} 个短圆柱粒子`);
+}
+	
+
+
+
+        /**
+ * 添加照片到场景（适配普通/奖励照片标记）
+ * @param {THREE.Texture} texture - 照片纹理
+ * @param {string} type - 类型：NORMAL/REWARD（默认NORMAL）
+ * @param {number} probability - 奖励概率（默认1）
+ */
+function addPhotoToScene(texture, type = 'NORMAL', probability = 1) {
+  const img = texture.image;
+  if (!img) return;
+
+  // 原有逻辑：计算宽高比+创建相框/照片（完全保留）
+  const aspect = img.width / img.height;   
+  const maxSize = 1.2;                     
+  let photoW, photoH;
+  if (aspect >= 1) { photoW = maxSize; photoH = maxSize / aspect; } 
+  else { photoH = maxSize; photoW = maxSize * aspect; }
+
+  const frameMargin = 0.15;                
+  const group = new THREE.Group();
+
+  const frameGeo = new THREE.BoxGeometry(photoW + frameMargin, photoH + frameMargin, 0.1);
+  const frameMat = new THREE.MeshStandardMaterial({ 
+      color: CONFIG.colors.gold, // 浅冰蓝
+      metalness: 1.0, 
+      roughness: 0.2 
+  });
+  const frame = new THREE.Mesh(frameGeo, frameMat);
+
+  const photoGeo = new THREE.PlaneGeometry(photoW, photoH);
+  const photoMat = new THREE.MeshStandardMaterial({ // 替换MeshBasicMaterial
+    map: texture });
+  const photo = new THREE.Mesh(photoGeo, photoMat);
+  photo.position.z = 0.06;
+
+  group.add(frame);
+  group.add(photo);
+  photoMeshGroup.add(group);
+	
+
+ // ========== 关键修改：绑定图片名称+强化类型/概率标记 ==========
+  // 1. 获取图片文件名（如reward1.jpg，用于排查）
+  const imgName = texture.image.src.split('/').pop();
+  // 2. 给照片Group绑定完整元信息（包含名称）
+  group.userData = { 
+    type: type,          // 明确标记类型：NORMAL/REWARD
+    probability: probability, // 明确标记概率
+    name: imgName        // 新增：绑定图片名称，方便控制台排查
+  };
+  // 3. 同步到全局photos数组（确保类型/概率/名称一一对应）
+  window.photos.push({ 
+    mesh: group, 
+    type: type,          // 显式赋值，避免隐式类型错误
+    probability: probability, // 显式赋值，确保概率准确
+    name: imgName        // 新增：保存图片名称，排查时能看到是哪张图
+  });
+
+  // 原有逻辑：加入粒子系统
+  particleSystem.push(new Particle(group, 'PHOTO', false));
+
+  // 新增：控制台日志（方便验证加载是否正确）
+  console.log(`[添加照片] 名称=${imgName}，类型=${type}，概率=${probability}，索引=${window.photos.length-1}`);
+}
+     
+
+
+
+
+        // ==========================================
+        // 7. MediaPipe 手势识别逻辑
+        // ==========================================
+        async function initMediaPipe() {
+    const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+    handLandmarker = await HandLandmarker.createFromOptions(vision, {
+        baseOptions: { 
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`, 
+            delegate: "GPU" 
+        },
+        runningMode: "VIDEO", numHands: 1
+    });
+    
+    video = document.getElementById('webcam');
+    const canvasElement = document.getElementById('webcam-preview');
+    canvasCtx = canvasElement.getContext('2d');
+    drawingUtils = new DrawingUtils(canvasCtx);
+    
+    if (navigator.mediaDevices?.getUserMedia) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
+            });
+            video.srcObject = stream;
+            
+            video.addEventListener("loadeddata", () => { 
+                video.play(); 
+                
+                // === 【彻底删除】所有控制wrapper尺寸的代码 ===
+                // 只保留Canvas防模糊的设置（不影响显示尺寸）
+                const videoW = video.videoWidth;
+                const videoH = video.videoHeight;
+                canvasElement.width = videoW;
+                canvasElement.height = videoH;
+                // ============================================
+
+                const wrapper = document.getElementById('webcam-wrapper');
+                wrapper.style.opacity = 1; // 只控制显隐，不控制尺寸
+                predictWebcam(); 
+            });
+        } catch (e) { console.warn("摄像头访问被拒绝", e); }
+    }
+}
+
+// predictWebcam函数保持不变（无需修改）
+let lastVideoTime = -1;
+async function predictWebcam() {
+    const canvasElement = document.getElementById('webcam-preview');
+    if (video.videoWidth && canvasElement.width !== video.videoWidth) { 
+        canvasElement.width = video.videoWidth; canvasElement.height = video.videoHeight; 
+    }
+    
+    if (lastVideoTime !== video.currentTime) {
+        lastVideoTime = video.currentTime;
+        let result = null;
+        if (handLandmarker) result = handLandmarker.detectForVideo(video, performance.now());
+        
+        canvasCtx.save();
+        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+        
+        if (result && result.landmarks && result.landmarks.length > 0) {
+            for (const landmarks of result.landmarks) {
+                drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS, { color: "#d4af37", lineWidth: 3 });
+                drawingUtils.drawLandmarks(landmarks, { color: "#ffffff", lineWidth: 1, radius: 3 });
+            }
+            processGestures(result.landmarks[0]);
+        } else { 
+            STATE.hand.detected = false; 
+        }
+        canvasCtx.restore();
+    }
+    requestAnimationFrame(predictWebcam);
+}
+
+        // 核心手势判断算法
+       // 核心手势判断算法（终极修复：Pinch循环切换照片）
+function processGestures(lm) {
+	 // 核心：未启动场景 或 摄像头未初始化 → 禁用手势
+    if (!window.isSceneStarted || !window.mediaPipeInited) return;
+    STATE.hand.detected = true;
+
+	if (window.isRewardFrozen) return;
+
+    // ========== 1. 提前初始化索引（只初始化一次，永不重置） ==========
+    if (typeof window.photoIndex === 'undefined') {
+        window.photoIndex = 0; // 用window全局变量，避免STATE被意外重置
+    }
+
+    // 获取关键点坐标 (0:手腕, 4:拇指尖, 8:食指尖, 9:掌心, 12:中指尖, 16:无名指尖, 20:小指尖)
+    const wrist = lm[0];
+    const thumbTip = lm[4];
+    const indexTip = lm[8];
+    const middleTip = lm[12];
+    const ringTip = lm[16];
+    const pinkyTip = lm[20];
+    const palm = lm[9]; 
+
+    // ========== 2. Pinch手势判定（拇指+食指捏合） ==========
+    const pinchDistance = Math.hypot(
+        thumbTip.x - indexTip.x, 
+        thumbTip.y - indexTip.y,
+        thumbTip.z - indexTip.z
+    );
+    const pinchThreshold = 0.05;
+    const isPinching = pinchDistance < pinchThreshold;
+    
+    // 记录上一帧Pinch状态（全局变量，避免丢失）
+    if (typeof window.lastPinch === 'undefined') window.lastPinch = false;
+    const isJustPinched = !window.lastPinch && isPinching;
+
+	// ========== ✅ 新增：GA4统计「捏合手势尝试」事件 ==========
+    if (isJustPinched && window.gtag) { // 仅「首次捏合」时统计，避免重复计数
+        gtag('event', 'gesture_pinch', {
+            event_category: '手势交互', // 事件分类（方便筛选）
+            event_label: '用户尝试捏合手势（Pinch）', // 事件描述
+            value: 1, // 计数用，固定传1
+            // 可选：新增维度，区分捏合是否成功抓到内容
+            pinch_attempt_type: window.photos?.length > 0 ? '尝试抓照片' : '无照片（抓星星）'
+        });
+        console.log('📊 GA4：用户尝试捏合手势，已上报gesture_pinch事件');
+    }
+    // ========== GA4统计代码结束 ==========
+
+    // ========== 3. 手掌张开程度判定（用于TREE/SCATTER模式） ==========
+    const dIndex = Math.hypot(indexTip.x - wrist.x, indexTip.y - wrist.y);
+    const dMiddle = Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y);
+    const dRing = Math.hypot(ringTip.x - wrist.x, ringTip.y - wrist.y);
+    const dPinky = Math.hypot(pinkyTip.x - wrist.x, pinkyTip.y - wrist.y);
+    const avgSpread = (dIndex + dMiddle + dRing + dPinky) / 4;
+    const isPalmOpen = avgSpread > CONFIG.gestures.palmOpenThreshold;
+
+    // ========== 4. 核心状态机逻辑 ==========
+    if (isPinching) {
+    // FOCUS模式：Pinch捏合 → 切换照片/聚焦星星
+    STATE.mode = 'FOCUS';
+    // 过滤有效照片（确保mesh存在）
+    const photos = particleSystem.filter(p => p.type === 'PHOTO' && p.mesh);
+    console.log("有效照片列表：", photos.map((p, i) => `第${i}张：${p.mesh.name || '未命名'}`));
+    console.log("当前全局索引：", window.photoIndex);
+
+    // 你原有的pinch触发逻辑位置（比如onPinch函数内）
+// processGestures函数中的pinch逻辑完整修复版
+if (isJustPinched && window.photos && window.photos.length > 0) {
+  if (!window.photoHistory) window.photoHistory = [];
+  
+  let randomIndex;
+  let isReward = false;
+
+  // 1. 筛选奖励/普通图片索引
+  const rewardIndexes = [];
+  window.photos.forEach((photo, idx) => {
+    if (photo.type === 'REWARD' && Math.random() <= photo.probability) {
+      rewardIndexes.push(idx);
+    }
+  });
+  const normalIndexes = window.photos.reduce((acc, photo, idx) => {
+    if (photo.type === 'NORMAL') acc.push(idx);
+    return acc;
+  }, []);
+
+  // 2. 确定候选列表（兜底逻辑）
+  let finalCandidates = rewardIndexes.length > 0 ? rewardIndexes : normalIndexes;
+  if (finalCandidates.length === 0) finalCandidates = [0]; // 终极兜底
+
+  // 3. 选索引（排除历史）
+  if (finalCandidates.length === 1) {
+    randomIndex = finalCandidates[0];
+  } else {
+    do {
+      randomIndex = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
+    } while (window.photoHistory.includes(randomIndex));
+  }
+
+  // 4. 校验selected和mesh（核心：解决mesh未定义）
+  const selected = window.photos[randomIndex] || window.photos[0]; // 兜底
+  if (selected && selected.mesh) {
+    // 触发特效（使用selected.mesh，而非单独的mesh）
+    if (selected.type === 'REWARD') {
+      isReward = true;
+      triggerRewardEffect(selected.mesh, selected.probability);
+    } else {
+      triggerNormalEffect(selected.mesh);
+    }
+    // 更新聚焦
+    STATE.focusTarget = selected.mesh;
+  } else {
+    console.warn('⚠️ 照片mesh未定义，索引：', randomIndex);
+    STATE.focusTarget = STATE.starMesh; // 兜底聚焦星星
+  }
+
+  // 5. 更新历史记录
+  window.photoIndex = randomIndex;
+  window.photoHistory.push(randomIndex);
+  if (window.photoHistory.length > 2) window.photoHistory.shift();
+
+  // 日志
+  console.log(isReward ? 
+    `🎉 触发奖励图片：名称=${selected?.name || '未知'}` : 
+    `🔄 触发普通图片：名称=${selected?.name || '未知'}`
+  );
+} else if (window.photos?.length === 0) {
+  STATE.focusTarget = STATE.starMesh;
+  console.log("📭 无照片，聚焦星星");
+}
+
+// 聚焦时停止旋转
+STATE.hasPalmCenter = false;
+STATE.spinVel.x *= 0.9;
+STATE.spinVel.y *= 0.9;
+	}else {
+        // TREE/SCATTER模式：非Pinch状态 → 手掌控制旋转
+        STATE.wasPointing = false; // 兼容原有指点手势的状态重置
+
+        if (isPalmOpen) {
+            // SCATTER模式：手掌张开 → 手动控制旋转
+            if (STATE.mode !== 'SCATTER' || !STATE.hasPalmCenter) {
+                STATE.palmCenter.x = palm.x;
+                STATE.palmCenter.y = palm.y;
+                STATE.hasPalmCenter = true;
+            }
+            STATE.mode = 'SCATTER';
+			
+            const dx = palm.x - STATE.palmCenter.x;
+            const dy = palm.y - STATE.palmCenter.y;
+            const gain = CONFIG.gestures.sensitivity;
+            const maxSpeed = 3.0;
+
+            const targetVelY = THREE.MathUtils.clamp(dx * gain, -maxSpeed, maxSpeed);
+            const targetVelX = THREE.MathUtils.clamp(-dy * gain, -maxSpeed, maxSpeed);
+
+            // 平滑速度变化
+            STATE.spinVel.x += (targetVelX - STATE.spinVel.x) * 0.2;
+            STATE.spinVel.y += (targetVelY - STATE.spinVel.y) * 0.2;
+        } else {
+            // TREE模式：手掌放松 → 自动旋转
+            STATE.mode = 'TREE';
+            STATE.hasPalmCenter = false;
+            STATE.spinVel.x *= 0.9;
+            STATE.spinVel.y *= 0.9;
+        }
+
+        // 更新手的位置（仅非FOCUS模式下）
+        const targetX = (palm.x - 0.5) * 3.0;
+        const targetY = (palm.y - 0.5) * 3.0;
+        STATE.hand.x += (targetX - STATE.hand.x) * 0.1;
+        STATE.hand.y += (targetY - STATE.hand.y) * 0.1;
+    }
+
+    // ========== 5. 保存上一帧Pinch状态（供下一帧判断） ==========
+    window.lastPinch = isPinching;
+}
+
+		/**
+ * 通用工具函数：重置照片材质为「低反光+亮度补偿」模式
+ * @param {THREE.Group} mesh - 照片Group容器
+ * @param {number} brightness - 亮度补偿值（0~2，默认1.2，越高越亮）
+ */
+function resetPhotoMaterialForLowReflect(mesh, brightness = 7) {
+  if (!mesh) return;
+  mesh.traverse((child) => {
+    if (child.isMesh) {
+      const mat = child.material;
+      // 1. 关闭自发光（核心，不改动）
+      mat.emissive.setHex(0x000000);
+      mat.emissiveIntensity = 0.2;
+      
+      // 2. 低反光参数（适度放宽，提升亮度）
+      if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+        mat.roughness = 0.6;        // 从1.0降到0.8（轻微反光，提升亮度）
+        mat.metalness = 0.9;        // 从0.0升到0.1（极轻微金属感，提升亮度）
+        mat.specularIntensity = 0.3;// 从0.0升到0.1（极轻微高光）
+        mat.clearcoat = 0;          
+        mat.clearcoatRoughness = 1;
+        mat.envMapIntensity = 0.7;  // 从0.0升到0.1（轻微环境反光）
+        
+        // 核心：材质颜色亮度补偿（不触发反光）
+        mat.color.offsetHSL(0, 0, brightness - 1); // 只调亮度通道
+        mat.needsUpdate = true;
+      }
+      
+      // 3. 针对基础材质：直接提升颜色亮度
+      if (mat instanceof THREE.MeshBasicMaterial) {
+        mat.lights = false; // 仍屏蔽场景光（关键）
+        // 亮度补偿（比如1.2=提升20%亮度）
+        const currentColor = mat.color.clone();
+        currentColor.multiplyScalar(brightness);
+        mat.color = currentColor;
+        mat.needsUpdate = true;
+      }
+    }
+  });
+}
+		
+
+		/// 普通照片特效（基础放大+弱发光）
+// 普通照片特效（仅保留缩放，完全移除发光逻辑）
+function triggerNormalEffect(mesh) {
+  // 防御性校验：mesh不存在直接返回
+  if (!mesh) {
+    console.warn('普通特效触发失败：mesh为空');
+    return;
+  }
+
+  // 仅保留普通照片放大逻辑
+  mesh.scale.lerp(new THREE.Vector3(5, 5, 5), 0.1);
+  
+  // 清除残留的奖励特效定时器（避免冲突）
+  if (mesh.rewardPulseInterval) {
+    clearInterval(mesh.rewardPulseInterval);
+    mesh.rewardPulseInterval = null;
+  }
+}
+/**
+ * 奖励照片专属特效（仅保留缩放+脉冲+粒子+UI提示，移除发光）
+ * @param {THREE.Group} mesh - 照片的Group容器
+ * @param {number} probability - 奖励触发概率
+ */
+/**
+ * 奖励照片专属特效（彻底解决反光+保留相框发光）
+ * @param {THREE.Group} mesh - 照片的Group容器
+ * @param {number} probability - 奖励触发概率
+ */
+function triggerRewardEffect(mesh, probability) {
+  // 防御性校验
+  if (!mesh || typeof probability !== 'number') {
+    console.warn('奖励特效触发失败：参数无效');
+    return;
+  }
+
+ // ========== ✅ 【新增核心】GA4 奖励捕获事件上报 —— 放在最顶部 ==========
+  if (window.gtag) { // 兼容：如果gtag未加载，不报错
+    gtag('event', 'christmas_reward_caught', {
+      // 事件核心参数（可在GA4后台筛选/统计）
+      event_category: '用户交互',
+      event_label: '圣诞奖励图捕获',
+      reward_probability: probability, // 捕获的奖励概率（0.002）
+      reward_type: '稀有奖励', // 可自定义：比如区分不同奖励图写'reward1/reward2/reward3'
+      value: 1 // 计数用，固定传1即可
+    });
+    console.log('📊 GA4奖励事件已上报，概率：', probability);
+  }
+  // ========== GA4 上报代码结束 ==========
+
+  // ========== 新增：奖励触发后冻结交互 ==========
+  window.isRewardFrozen = true; // 全局标记：冻结状态
+  const freezeOverlay = document.getElementById('rewardFreezeOverlay');
+  // 🔥 核心修改：替换直接改display，改为添加.show类（匹配CSS逻辑）
+  if (freezeOverlay) freezeOverlay.classList.add('show'); // 不再用style.display = 'flex'
+
+  // ========== 核心修复1：先重置照片材质为低反光模式 ==========
+  resetPhotoMaterialForLowReflect(mesh,4);
+
+  // ========== 核心修复2：临时降低照片周围场景光（减少缩放反光） ==========
+  const originalLightIntensities = [];
+  if (typeof scene !== 'undefined' && scene) {
+    scene.traverse((obj) => {
+      if (obj.isLight && obj.intensity > 0) {
+        originalLightIntensities.push({
+          light: obj,
+          intensity: obj.intensity
+        });
+        // 只降低照片15单位内的光源（缩小范围，避免影响全局）
+        const distance = obj.position.distanceTo(mesh.position);
+        if (distance < 15) {
+          obj.intensity *= 1.8; // 强度降为40%（比之前更保守，减少反光）
+        }
+      }
+    });
+  }
+
+  // 1. 奖励照片缩放+脉冲动画（适度缩小，减少受光面积）
+  mesh.scale.set(6, 6, 6); // 初始尺寸更小，减少反光基础
+  gsap.to(mesh.scale, { x: 7, y: 7, z: 7, duration: 0.3, ease: 'power2.out' });
+  gsap.to(mesh.scale, { x: 6.5, y: 6.5, z: 6.5, duration: 0.2, delay: 0.3, ease: 'power2.in' });
+  
+  // 循环脉冲（同步缩小，避免过度放大）
+  if (mesh.rewardPulseInterval) clearInterval(mesh.rewardPulseInterval);
+  mesh.rewardPulseInterval = setInterval(() => {
+    gsap.to(mesh.scale, { x: 7, y: 7, z: 7, duration: 0.2, ease: 'power1.out' });
+    gsap.to(mesh.scale, { x: 6.5, y: 6.5, z: 6.5, duration: 0.2, delay: 0.2, ease: 'power1.in' });
+  }, 800);
+  
+  setTimeout(() => {
+    if (mesh.rewardPulseInterval) {
+      clearInterval(mesh.rewardPulseInterval);
+      mesh.rewardPulseInterval = null;
+      // 结束后回弹到正常大小
+      gsap.to(mesh.scale, { x: 5, y: 5, z: 5, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+    }
+
+    // 特效结束后恢复场景光强度
+    originalLightIntensities.forEach(item => {
+      if (item.light && typeof item.light.intensity !== 'undefined') {
+        item.light.intensity = item.intensity;
+      }
+    });
+  }, 4000);
+
+  // 2. 相框发光（仅相框，照片不发光）
+  mesh.traverse((child) => {
+    // 优先匹配相框标识，无标识则用BoxGeometry（兼容原有逻辑）
+    const isFrame = child.userData.isPhotoFrame || (child.isMesh && child.geometry instanceof THREE.BoxGeometry);
+    const isPhoto = !child.userData.isPhotoFrame && (child.isMesh && child.geometry instanceof THREE.PlaneGeometry);
+
+    if (isFrame && !isPhoto) { // 只让相框发光
+      child.material.emissive.setHex(0xffff00);
+      child.material.emissiveIntensity = 2.0;
+      // 相框呼吸发光
+      gsap.to(child.material, { 
+        emissiveIntensity: 0.8, 
+        duration: 2, 
+        repeat: -1, 
+        yoyo: true, 
+        ease: 'power1.inOut' 
+      });
+      // 4秒后停止发光
+      setTimeout(() => {
+        gsap.to(child.material, { emissiveIntensity: 0, duration: 1 });
+      }, 4000);
+    }
+    // 兜底：确保照片不发光
+    if (isPhoto) {
+      child.material.emissiveIntensity = 0.3;
+      child.material.emissive.setHex(0x000000);
+    }
+  });
+
+  // 3. 金色星尘粒子特效（保留）
+  if (typeof createRewardParticles === 'function') {
+    createRewardParticles(mesh.position);
+    setTimeout(() => createRewardParticles(mesh.position, true), 500);
+  }
+
+  // 4. 屏幕UI提示（保留）
+  if (typeof showRewardTip === 'function') {
+    showRewardTip(probability);
+  }
+
+  // 5. 全屏闪光特效（保留）
+  createScreenFlash();
+
+  // 6. 音效（可选）
+  // playRewardSound();
+}
+
+// 升级：奖励星尘粒子（多形态+多波次+轨迹）
+function createRewardParticles(centerPos, isBig = false) {
+  const particleCount = isBig ? 40 : 100; // 大粒子数量少，小粒子数量多
+  const size = isBig ? 0.3 : 0.15; // 大粒子尺寸更大
+  const range = isBig ? 18 : 12; // 大粒子扩散范围更广
+
+  for (let i = 0; i < particleCount; i++) {
+    const geo = new THREE.SphereGeometry(size, 12, 12); // 更高精度，更圆润
+    // 渐变金色，增加层次感
+    const goldColor = new THREE.Color(0xffff00);
+    goldColor.offsetHSL(0, 0, Math.random() * 0.3); // 随机亮度
+    const mat = new THREE.MeshBasicMaterial({ 
+      color: goldColor, 
+      transparent: true, 
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending // 叠加混合，更亮更通透
+    });
+    const particle = new THREE.Mesh(geo, mat);
+    
+    // 初始位置（球形扩散）
+    particle.position.copy(centerPos);
+    particle.position.x += (Math.random() - 0.5) * range;
+    particle.position.y += (Math.random() - 0.5) * range;
+    particle.position.z += (Math.random() - 0.5) * range;
+
+    // 初始缩放动画（粒子出生时放大）
+    particle.scale.set(0, 0, 0);
+    gsap.to(particle.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: 'power2.out' });
+    
+    mainGroup.add(particle);
+
+    // 轨迹动画（升级：曲线运动+随机方向）
+    const targetX = particle.position.x + (Math.random() - 0.5) * (isBig ? 15 : 8);
+    const targetY = particle.position.y + (Math.random() - 0.5) * (isBig ? 15 : 8);
+    const targetZ = particle.position.z + (Math.random() - 0.5) * (isBig ? 15 : 8);
+    gsap.to(particle.position, { 
+      x: targetX, 
+      y: targetY, 
+      z: targetZ, 
+      duration: isBig ? 3.5 : 2.5, 
+      ease: 'power2.out' 
+    });
+
+    // 透明度+缩放淡出（升级：先亮后暗，带闪烁）
+    gsap.to(particle.material, { 
+      opacity: 0, 
+      duration: isBig ? 3.5 : 2.5,
+      onUpdate: () => {
+        // 随机闪烁效果
+        if (Math.random() > 0.95) {
+          particle.material.opacity = Math.random() * 0.8 + 0.2;
+        }
+      },
+      onComplete: () => {
+        mainGroup.remove(particle);
+        particle.geometry.dispose(); // 释放内存
+        particle.material.dispose();
+      }
+    });
+  }
+}
+
+// 升级：奖励UI提示（动画入场+文字特效+背景光晕）
+// 适配单种隐藏奖励：纯英文提示（无区分，统一酷炫效果）
+function showRewardTip(probability) {
+  const tip = document.createElement('div');
+  // 1. 添加类名，用于CSS区分PC/移动端
+  tip.className = 'reward-tip';
+  const enText = '🎁 恭喜你，抓到了驚喜獎勵';
+  
+  // 2. 仅保留核心定位/层级样式（无法用媒体查询控制的部分）
+  tip.style.cssText = `
+    position: fixed; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%) scale(1);
+    z-index: 1000000; 
+    pointer-events: none;
+    opacity: 1;
+  `;
+  
+  // 3. 文字内容（移除内联font-size，交给CSS控制）
+  tip.innerHTML = `<span class="reward-tip-text">${enText}</span>`;
+  
+  document.body.appendChild(tip);
+  console.log('✅ 奖励文字已创建，DOM节点：', tip);
+  
+  // 保留原有GSAP动画逻辑（完全不变）
+  gsap.to(tip, {
+    scale: 1.2, 
+    duration: 0.5, 
+    ease: 'power2.out',
+    onComplete: () => {
+      gsap.to(tip, { scale: 1, duration: 0.2, ease: 'power2.in' });
+    }
+  });
+  
+  let flashInterval = setInterval(() => {
+    tip.style.opacity = Math.random() > 0.5 ? 1 : 0.8;
+  }, 200);
+  
+  setTimeout(() => {
+    clearInterval(flashInterval);
+    gsap.to(tip, { 
+      opacity: 0, 
+      scale: 0.8,
+      duration: 1.2, 
+      ease: 'power2.inOut',
+      onComplete: () => document.body.removeChild(tip)
+    });
+  }, 3000);
+}
+// 新增：全屏闪光特效
+function createScreenFlash() {
+  const flash = document.createElement('div');
+  flash.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255,255,255,0.8);
+    z-index: 999998;
+    pointer-events: none;
+    opacity: 0;
+  `;
+  document.body.appendChild(flash);
+  
+  // 闪光动画（快速闪一下）
+  gsap.to(flash.style, { 
+    opacity: 1, 
+    duration: 0.1, 
+    ease: 'power1.out',
+    onComplete: () => {
+      gsap.to(flash.style, { 
+        opacity: 0, 
+        duration: 0.5, 
+        ease: 'power1.in',
+        onComplete: () => document.body.removeChild(flash)
+      });
+    }
+  });
+}
+
+// 可选：奖励音效
+// function playRewardSound() {
+//   const audio = new Audio('./assets/audio/reward.mp3');
+//   audio.volume = 0.8;
+//   audio.play().catch(err => console.error('音效播放失败：', err));
+// }
+
+        // ==========================================
+        // 8. 动画循环 & DOM 事件
+        // ==========================================
+       // 8. 动画循环 & DOM 事件
+        function animate() {
+    requestAnimationFrame(animate);
+
+    const dt = clock.getDelta();
+    STATE.time = clock.elapsedTime;
+    const currentTimeMs = STATE.time * 1000; // 当前时间（毫秒）
+
+    // 核心：未启动场景 或 摄像头未初始化 → 禁用手势动画，但继续渲染
+    if (!window.isSceneStarted) {
+        // 检查粒子是否归位完成（仅在未启动场景时判断）
+        if (!ANIMATION_STATE.treeSettleComplete) {
+            checkTreeSettle(currentTimeMs); // 新增：检查归位
+        }
+        composer.render();
+        return;
+    }
+
+    // 手势相关动画逻辑（原有代码不变）
+    let inputX = STATE.hand.detected ? STATE.hand.x : STATE.mouse.x * 0.5;
+    if (STATE.mode === 'TREE') {
+        STATE.rotation.y -= 0.4 * dt; 
+        STATE.rotation.x = THREE.MathUtils.lerp(STATE.rotation.x, 0.15, dt * 2.0);
+        mainGroup.rotation.z = THREE.MathUtils.lerp(mainGroup.rotation.z, inputX * 0.1, dt * 2);
+    } 
+    else if (STATE.mode === 'SCATTER') {
+        STATE.rotation.y += STATE.spinVel.y * dt;
+        STATE.rotation.x += STATE.spinVel.x * dt;
+        if (!STATE.hand.detected) {
+            STATE.spinVel.x *= 0.95;
+            STATE.spinVel.y *= 0.95;
+        }
+    }
+
+    mainGroup.rotation.y = STATE.rotation.y;
+    mainGroup.rotation.x = STATE.rotation.x;
+    bgGroup.rotation.y -= 0.05 * dt;
+
+    if (STATE.starMesh) {
+        STATE.starMesh.rotation.y -= dt;
+        STATE.starMesh.rotation.z = Math.sin(STATE.time) * 0.2;
+        const scale = 1.0 + Math.sin(STATE.time * 2) * 0.1;
+        STATE.starMesh.scale.set(scale, scale, scale);
+    }
+	if (snowSystem && snowSystem.visible) {
+    console.log('✅ 雪花动画正在执行！'); // 核心验证日志
+    const positions = snowSystem.geometry.attributes.position.array;
+    const velocities = snowSystem.geometry.attributes.velocity.array;
+    const count = CONFIG.particles.snowCount || 2500;
+
+    for (let i = 0; i < count; i++) {
+        positions[i * 3 + 1] -= velocities[i] * dt* 6; 
+        positions[i * 3] += Math.sin(STATE.time * 0.5 + i) * 0.1; 
+        if (positions[i * 3 + 1] < -50) {
+            positions[i * 3 + 1] = 100; 
+            positions[i * 3] = (Math.random() - 0.5) * 200;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 150;
+        }
+    }
+    snowSystem.geometry.attributes.position.needsUpdate = true;
+} else {
+    console.log('❌ 雪花动画未执行：snowSystem不存在/不可见');
+}
+
+    // ==========================================
+    // 雪花代码结束
+    // ==========================================
+    for(let i=0, l=particleSystem.length; i<l; i++){
+        particleSystem[i].update(dt, STATE.time, STATE.mode, STATE.focusTarget);
+    }
+
+    composer.render();
+}
+
+// 新增：检查圣诞树粒子是否归位完成
+function checkTreeSettle(currentTimeMs) {
+    // 1. 超时兜底（延长到4秒，给粒子足够的动画时间）
+    if (currentTimeMs - ANIMATION_STATE.settleCheckTime > ANIMATION_STATE.settleDelay) {
+        console.log('✅ 粒子归位超时，开始平滑归位动画');
+        // 启动平滑归位动画（而非瞬间瞬移）
+        startSmoothSettleAnimation();
+        ANIMATION_STATE.treeSettleComplete = true;
+        return;
+    }
+
+    // 2. 全量检查（判断是否需要归位）
+    let allInPlace = true;
+    let maxError = 0;
+    for (let i = 0; i < particleSystem.length; i++) {
+        const p = particleSystem[i];
+        if (p.type === 'DUST') continue;
+        
+        const error = p.mesh.position.distanceTo(p.posTree);
+        maxError = Math.max(maxError, error);
+        if (error > 0.05) {
+            allInPlace = false;
+            break;
+        }
+    }
+
+    // 3. 所有粒子接近归位 → 启动最终平滑对齐（避免微小晃动）
+    if (allInPlace) {
+        startSmoothSettleAnimation(0.2); // 快速平滑（0.2秒）
+        ANIMATION_STATE.treeSettleComplete = true;
+        console.log(`✅ 粒子接近归位，最大误差：${maxError.toFixed(4)}，开始最终平滑对齐`);
+    }
+}
+
+		// 平滑归位动画：粒子在指定时间内 lerp 到目标位置
+function startSmoothSettleAnimation(duration = 3) {
+    // 记录动画开始时间
+    const startTime = Date.now();
+    const animationDuration = duration * 1000; // 转毫秒
+
+    // 动画循环函数
+    function animateSettle() {
+        // 计算动画进度（0-1）
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / animationDuration, 1);
+
+        // 对每个非星尘粒子进行平滑插值
+        for (let i = 0; i < particleSystem.length; i++) {
+            const p = particleSystem[i];
+            if (p.type === 'DUST') continue;
+
+            // 线性插值到目标位置（progress=1时完全归位）
+            p.mesh.position.lerp(p.posTree, progress);
+            // 同时平滑恢复基础尺寸
+            p.mesh.scale.lerp(new THREE.Vector3(p.baseScale, p.baseScale, p.baseScale), progress);
+        }
+
+        // 动画未完成则继续循环
+        if (progress < 1) {
+            requestAnimationFrame(animateSettle);
+        } else {
+            console.log('✅ 粒子平滑归位动画完成');
+        }
+    }
+
+    // 启动动画
+    requestAnimationFrame(animateSettle);
+}
+        function setupEvents() {
+            // 窗口调整
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                composer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+		
+
+            
+
+        
+            // UI 按钮: 全屏切换
+            const fullscreenBtn = document.getElementById('btn-fullscreen');
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => console.warn(err));
+                    } else {
+                        if (document.exitFullscreen) document.exitFullscreen();
+                    }
+                });
+                document.addEventListener('fullscreenchange', () => {
+                // 如果当前是全屏状态
+                if (document.fullscreenElement) {
+                    fullscreenBtn.textContent = '退出全屏'; 
+                } else {
+                    // 如果退出了全屏
+                    fullscreenBtn.textContent = '全屏顯示'; 
+                }
+            });
+            }
+
+            // 音乐播放 (交互触发)
+let musicPlayed = false; // 改更清晰的变量名，避免和AudioContext混淆
+const musicBtn = document.getElementById('music-play-btn'); // 兜底按钮
+
+const startMusic = () => {
+    const music = document.getElementById('bg-music');
+    
+    // 1. 校验音频标签是否存在
+    if (!music) {
+        console.error('音频标签不存在！请检查HTML里是否有id为bg-music的audio标签');
+        if (musicBtn) musicBtn.style.display = 'block'; // 显示兜底按钮
+        return;
+    }
+
+    // 2. 避免重复播放
+    if (musicPlayed) return;
+
+    // 3. 配置音频
+    music.volume = 0.5; // 音量50%
+    music.load(); // 强制重新加载（避免缓存问题）
+
+    // 4. 尝试播放
+    music.play()
+        .then(() => {
+            musicPlayed = true;
+            console.log('背景音乐播放成功！');
+            if (musicBtn) musicBtn.style.display = 'none'; // 隐藏兜底按钮
+        })
+        .catch(e => {
+            console.error('播放失败：', e);
+            // 播放失败时显示兜底按钮，让用户手动点
+            if (musicBtn) musicBtn.style.display = 'block';
+        });
+};
+
+			// 继续按钮点击事件：恢复交互+隐藏按钮
+document.getElementById('continueBtn').addEventListener('click', () => {
+  // 1. 取消冻结标记
+  window.isRewardFrozen = false;
+  // 2. 隐藏冻结层+按钮
+  const freezeOverlay = document.getElementById('rewardFreezeOverlay');
+  if (freezeOverlay) {
+    freezeOverlay.classList.remove('show');
+  }
+  // 3. 可选：播放点击音效（增强体验）
+  // const clickAudio = new Audio('./assets/audio/click.mp3');
+  // clickAudio.volume = 0.5;
+  // clickAudio.play().catch(err => console.error('点击音效失败：', err));
+});
+// 监听首次点击/触摸（只触发一次）
+window.addEventListener('click', startMusic, { once: true });
+window.addEventListener('touchstart', startMusic, { once: true });
+
+// 兜底按钮的点击事件（用户手动触发）
+if (musicBtn) {
+    musicBtn.addEventListener('click', startMusic);
+}
+
+            // 触摸滑动备用方案 (无摄像头时)
+            let touchStartX = 0;
+            document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+            document.addEventListener('touchmove', e => {
+                if(STATE.hand.detected) return; // 优先响应摄像头
+                const deltaX = e.touches[0].clientX - touchStartX;
+                STATE.rotation.y += deltaX * 0.005;
+                touchStartX = e.touches[0].clientX;
+            });
+        }
+
+        // 启动程序
+        init();
+    </script>
+
+    <script>
+        function downloadHTML() {
+            window.location.href = '/html2images/download/' + window.location.pathname.split('/').pop();
+        }
+        function closeDownloadBtn(event) {
+            event.stopPropagation();
+            document.getElementById('downloadContainer').classList.add('hidden');
+        }
+        // 环境检测：仅在特定环境显示下载按钮
+        if (window.location.protocol === 'file:' || window.location.hostname !== 'api.xupeidong.cn') {
+            document.getElementById('downloadContainer').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
