@@ -875,7 +875,7 @@
 // ==========================================
 const CONFIG = {
     colors: {
-        bg: 0x002244,        // 深海蓝（替换原0x120a00）
+        bg: 0x000000,        // 深海蓝（替换原0x120a00）
         gold: 0xaaddff,      // 浅冰蓝（替换原0xff4500）
         red: 0x00ffff,       // 冰青色（替换原0xcc2200）
         green: 0x0088aa,     // 浅蓝绿（适配冰蓝系的绿色）
@@ -1254,7 +1254,7 @@ waitForTreeComplete();
         function setupEnvironment() {
             const pmremGenerator = new THREE.PMREMGenerator(renderer);
             pmremGenerator.compileEquirectangularShader();
-            scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+            scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.02).texture;
         }
 
         function setupLights() {
