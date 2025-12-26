@@ -1913,115 +1913,52 @@ async function predictWebcam() {
 }
 
 	// ========== 全局变量定义（放在函数外部，只需定义一次） ==========
-// 手势关键点低通滤波：存储上一帧平滑后的坐标
-window.smoothLandmarks = null;
-// 手部距离/近距离标记（用于动态适配阈值）
-window.handDistance = 1.0;
-window.isCloseHand = false;
-// Pinch状态记录（避免重复触发）
-window.lastPinch = false;
-// 照片选择历史（兜底逻辑）
-window.photoHistory = [];
-
-// 核心手势判断算法（终极修复：Pinch循环切换照片 + 近距离识别优化）
 function processGestures(lm) {
-    // 核心：未启动场景 或 摄像头未初始化 → 禁用手势
+	 // 核心：未启动场景 或 摄像头未初始化 → 禁用手势
     if (!window.isSceneStarted || !window.mediaPipeInited) return;
     STATE.hand.detected = true;
 
-    if (window.isRewardFrozen) return;
-
-    // ========== ✅ 新增：估算手部距离镜头的远近（核心：动态适配阈值） ==========
-    // 用掌心z坐标估算距离（z值越小，手越近；z值越大，手越远）
-    const palmZ = lm[9].z;
-    window.handDistance = Math.max(0.1, palmZ); // 限制最小值，避免除以0
-    window.isCloseHand = palmZ < 0.2; // z < 0.2 视为近距离
-
-    // ========== ✅ 动态调整滤波系数：近距离更灵敏，远距离更平滑 ==========
-    const dynamicFilterFactor = window.isCloseHand ? 0.3 : 0.1;
-    if (!window.smoothLandmarks) {
-        window.smoothLandmarks = JSON.parse(JSON.stringify(lm));
-    } else {
-        lm.forEach((point, idx) => {
-            window.smoothLandmarks[idx].x = window.smoothLandmarks[idx].x * (1 - dynamicFilterFactor) + point.x * dynamicFilterFactor;
-            window.smoothLandmarks[idx].y = window.smoothLandmarks[idx].y * (1 - dynamicFilterFactor) + point.y * dynamicFilterFactor;
-            window.smoothLandmarks[idx].z = window.smoothLandmarks[idx].z * (1 - dynamicFilterFactor) + point.z * dynamicFilterFactor;
-        });
-    }
-    const smoothLm = window.smoothLandmarks;
-
-    // ========== ✅ 新增：坐标归一化函数（解决近距离坐标溢出问题） ==========
-    const normalizeCoord = (val) => Math.max(0, Math.min(1, val));
+	if (window.isRewardFrozen) return;
 
     // ========== 1. 提前初始化索引（只初始化一次，永不重置） ==========
     if (typeof window.photoIndex === 'undefined') {
         window.photoIndex = 0; // 用window全局变量，避免STATE被意外重置
     }
 
-    // ========== ✅ 修改：所有关键点改用【平滑+归一化】后的坐标（核心修复） ==========
     // 获取关键点坐标 (0:手腕, 4:拇指尖, 8:食指尖, 9:掌心, 12:中指尖, 16:无名指尖, 20:小指尖)
-    const wrist = {
-        x: normalizeCoord(smoothLm[0].x),
-        y: normalizeCoord(smoothLm[0].y),
-        z: normalizeCoord(smoothLm[0].z)
-    };
-    const thumbTip = {
-        x: normalizeCoord(smoothLm[4].x),
-        y: normalizeCoord(smoothLm[4].y),
-        z: normalizeCoord(smoothLm[4].z)
-    };
-    const indexTip = {
-        x: normalizeCoord(smoothLm[8].x),
-        y: normalizeCoord(smoothLm[8].y),
-        z: normalizeCoord(smoothLm[8].z)
-    };
-    const middleTip = {
-        x: normalizeCoord(smoothLm[12].x),
-        y: normalizeCoord(smoothLm[12].y),
-        z: normalizeCoord(smoothLm[12].z)
-    };
-    const ringTip = {
-        x: normalizeCoord(smoothLm[16].x),
-        y: normalizeCoord(smoothLm[16].y),
-        z: normalizeCoord(smoothLm[16].z)
-    };
-    const pinkyTip = {
-        x: normalizeCoord(smoothLm[20].x),
-        y: normalizeCoord(smoothLm[20].y),
-        z: normalizeCoord(smoothLm[20].z)
-    };
-    const palm = {
-        x: normalizeCoord(smoothLm[9].x),
-        y: normalizeCoord(smoothLm[9].y),
-        z: normalizeCoord(smoothLm[9].z)
-    };
+    const wrist = lm[0];
+    const thumbTip = lm[4];
+    const indexTip = lm[8];
+    const middleTip = lm[12];
+    const ringTip = lm[16];
+    const pinkyTip = lm[20];
+    const palm = lm[9]; 
 
-    // ========== 2. Pinch手势判定（✅ 动态阈值 + 归一化坐标） ==========
-    const basePinchThreshold = 0.03; // 基础阈值
-    // 动态阈值：近距离自动缩小，远距离保持基础值（核心解决近距离失效）
-    const dynamicPinchThreshold = basePinchThreshold * window.handDistance;
-    // 用归一化后的坐标计算捏合距离（三维）
+    // ========== 2. Pinch手势判定（拇指+食指捏合） ==========
     const pinchDistance = Math.hypot(
-        thumbTip.x - indexTip.x,
+        thumbTip.x - indexTip.x, 
         thumbTip.y - indexTip.y,
         thumbTip.z - indexTip.z
     );
-    const isPinching = pinchDistance < dynamicPinchThreshold; // 用动态阈值判断
-
+    const pinchThreshold = 0.05;
+    const isPinching = pinchDistance < pinchThreshold;
+    
     // 记录上一帧Pinch状态（全局变量，避免丢失）
+    if (typeof window.lastPinch === 'undefined') window.lastPinch = false;
     const isJustPinched = !window.lastPinch && isPinching;
 
-    // ========== ✅ 保留：GA4统计「捏合手势尝试」事件 ==========
+	// ========== ✅ 新增：GA4统计「捏合手势尝试」事件 ==========
     if (isJustPinched && window.gtag) { // 仅「首次捏合」时统计，避免重复计数
         gtag('event', 'gesture_pinch', {
-            event_category: '手势交互',
-            event_label: '用户尝试捏合手势（Pinch）',
-            value: 1,
-            pinch_attempt_type: window.photos?.length > 0 ? '尝试抓照片' : '无照片（抓星星）',
-            is_close_hand: window.isCloseHand // 新增：标记是否为近距离捏合
+            event_category: '手势交互', // 事件分类（方便筛选）
+            event_label: '用户尝试捏合手势（Pinch）', // 事件描述
+            value: 1, // 计数用，固定传1
+            // 可选：新增维度，区分捏合是否成功抓到内容
+            pinch_attempt_type: window.photos?.length > 0 ? '尝试抓照片' : '无照片（抓星星）'
         });
-        console.log('📊 GA4：用户尝试捏合手势（近距离：', window.isCloseHand, '），已上报gesture_pinch事件');
+        console.log('📊 GA4：用户尝试捏合手势，已上报gesture_pinch事件');
     }
+    // ========== GA4统计代码结束 ==========
 
     // ========== 3. 手掌张开程度判定（用于TREE/SCATTER模式） ==========
     const dIndex = Math.hypot(indexTip.x - wrist.x, indexTip.y - wrist.y);
@@ -2031,84 +1968,85 @@ function processGestures(lm) {
     const avgSpread = (dIndex + dMiddle + dRing + dPinky) / 4;
     const isPalmOpen = avgSpread > CONFIG.gestures.palmOpenThreshold;
 
-    // ========== 4. 核心状态机逻辑（完全保留原有逻辑，无修改） ==========
+    // ========== 4. 核心状态机逻辑 ==========
     if (isPinching) {
-        // FOCUS模式：Pinch捏合 → 切换照片/聚焦星星
-        STATE.mode = 'FOCUS';
-        // 过滤有效照片（确保mesh存在）
-        const photos = particleSystem.filter(p => p.type === 'PHOTO' && p.mesh);
-        console.log("有效照片列表：", photos.map((p, i) => `第${i}张：${p.mesh.name || '未命名'}`));
-        console.log("当前全局索引：", window.photoIndex);
+    // FOCUS模式：Pinch捏合 → 切换照片/聚焦星星
+    STATE.mode = 'FOCUS';
+    // 过滤有效照片（确保mesh存在）
+    const photos = particleSystem.filter(p => p.type === 'PHOTO' && p.mesh);
+    console.log("有效照片列表：", photos.map((p, i) => `第${i}张：${p.mesh.name || '未命名'}`));
+    console.log("当前全局索引：", window.photoIndex);
 
-        // 原有pinch触发逻辑（完整保留）
-        if (isJustPinched && window.photos && window.photos.length > 0) {
-            if (!window.photoHistory) window.photoHistory = [];
-            
-            let randomIndex;
-            let isReward = false;
+    // 你原有的pinch触发逻辑位置（比如onPinch函数内）
+// processGestures函数中的pinch逻辑完整修复版
+if (isJustPinched && window.photos && window.photos.length > 0) {
+  if (!window.photoHistory) window.photoHistory = [];
+  
+  let randomIndex;
+  let isReward = false;
 
-            // 1. 筛选奖励/普通图片索引
-            const rewardIndexes = [];
-            window.photos.forEach((photo, idx) => {
-                if (photo.type === 'REWARD' && Math.random() <= photo.probability) {
-                    rewardIndexes.push(idx);
-                }
-            });
-            const normalIndexes = window.photos.reduce((acc, photo, idx) => {
-                if (photo.type === 'NORMAL') acc.push(idx);
-                return acc;
-            }, []);
+  // 1. 筛选奖励/普通图片索引
+  const rewardIndexes = [];
+  window.photos.forEach((photo, idx) => {
+    if (photo.type === 'REWARD' && Math.random() <= photo.probability) {
+      rewardIndexes.push(idx);
+    }
+  });
+  const normalIndexes = window.photos.reduce((acc, photo, idx) => {
+    if (photo.type === 'NORMAL') acc.push(idx);
+    return acc;
+  }, []);
 
-            // 2. 确定候选列表（兜底逻辑）
-            let finalCandidates = rewardIndexes.length > 0 ? rewardIndexes : normalIndexes;
-            if (finalCandidates.length === 0) finalCandidates = [0]; // 终极兜底
+  // 2. 确定候选列表（兜底逻辑）
+  let finalCandidates = rewardIndexes.length > 0 ? rewardIndexes : normalIndexes;
+  if (finalCandidates.length === 0) finalCandidates = [0]; // 终极兜底
 
-            // 3. 选索引（排除历史）
-            if (finalCandidates.length === 1) {
-                randomIndex = finalCandidates[0];
-            } else {
-                do {
-                    randomIndex = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
-                } while (window.photoHistory.includes(randomIndex));
-            }
+  // 3. 选索引（排除历史）
+  if (finalCandidates.length === 1) {
+    randomIndex = finalCandidates[0];
+  } else {
+    do {
+      randomIndex = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
+    } while (window.photoHistory.includes(randomIndex));
+  }
 
-            // 4. 校验selected和mesh（核心：解决mesh未定义）
-            const selected = window.photos[randomIndex] || window.photos[0]; // 兜底
-            if (selected && selected.mesh) {
-                // 触发特效（使用selected.mesh，而非单独的mesh）
-                if (selected.type === 'REWARD') {
-                    isReward = true;
-                    triggerRewardEffect(selected.mesh, selected.probability);
-                } else {
-                    triggerNormalEffect(selected.mesh);
-                }
-                // 更新聚焦
-                STATE.focusTarget = selected.mesh;
-            } else {
-                console.warn('⚠️ 照片mesh未定义，索引：', randomIndex);
-                STATE.focusTarget = STATE.starMesh; // 兜底聚焦星星
-            }
-
-            // 5. 更新历史记录
-            window.photoIndex = randomIndex;
-            window.photoHistory.push(randomIndex);
-            if (window.photoHistory.length > 2) window.photoHistory.shift();
-
-            // 日志
-            console.log(isReward ? 
-                `🎉 触发奖励图片：名称=${selected?.name || '未知'}` : 
-                `🔄 触发普通图片：名称=${selected?.name || '未知'}`
-            );
-        } else if (window.photos?.length === 0) {
-            STATE.focusTarget = STATE.starMesh;
-            console.log("📭 无照片，聚焦星星");
-        }
-
-        // 聚焦时停止旋转
-        STATE.hasPalmCenter = false;
-        STATE.spinVel.x *= 0.9;
-        STATE.spinVel.y *= 0.9;
+  // 4. 校验selected和mesh（核心：解决mesh未定义）
+  const selected = window.photos[randomIndex] || window.photos[0]; // 兜底
+  if (selected && selected.mesh) {
+    // 触发特效（使用selected.mesh，而非单独的mesh）
+    if (selected.type === 'REWARD') {
+      isReward = true;
+      triggerRewardEffect(selected.mesh, selected.probability);
     } else {
+      triggerNormalEffect(selected.mesh);
+    }
+    // 更新聚焦
+    STATE.focusTarget = selected.mesh;
+  } else {
+    console.warn('⚠️ 照片mesh未定义，索引：', randomIndex);
+    STATE.focusTarget = STATE.starMesh; // 兜底聚焦星星
+  }
+
+  // 5. 更新历史记录
+  window.photoIndex = randomIndex;
+  window.photoHistory.push(randomIndex);
+  if (window.photoHistory.length > 2) window.photoHistory.shift();
+
+  // 日志
+  console.log(isReward ? 
+    `🎉 触发奖励图片：名称=${selected?.name || '未知'}` : 
+    `🔄 触发普通图片：名称=${selected?.name || '未知'}`
+  );
+} else if (window.photos?.length === 0) {
+  STATE.focusTarget = STATE.starMesh;
+  console.log("📭 无照片，聚焦星星");
+}
+
+// 聚焦时停止旋转
+STATE.hasPalmCenter = false;
+STATE.spinVel.x *= 0.9;
+STATE.spinVel.y *= 0.9;
+	}else {
         // TREE/SCATTER模式：非Pinch状态 → 手掌控制旋转
         STATE.wasPointing = false; // 兼容原有指点手势的状态重置
 
@@ -2120,7 +2058,7 @@ function processGestures(lm) {
                 STATE.hasPalmCenter = true;
             }
             STATE.mode = 'SCATTER';
-            
+			
             const dx = palm.x - STATE.palmCenter.x;
             const dy = palm.y - STATE.palmCenter.y;
             const gain = CONFIG.gestures.sensitivity;
