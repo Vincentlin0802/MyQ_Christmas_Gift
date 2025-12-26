@@ -610,7 +610,7 @@
 /* 移动端样式 - 强制小尺寸 */
 @media (max-width: 768px) {
     #webcam-wrapper.show {
-        width: 12vw !important;    /* 基础宽度10vw */
+        width: 15vw !important;    /* 基础宽度10vw */
         aspect-ratio: 3/4 !important; /* 固定比例，高度自动 */
         height: auto !important;
         min-width: 30px !important; /* 最小30px，防止看不见 */
@@ -1846,7 +1846,7 @@ function addPhotoToScene(texture, type = 'NORMAL', probability = 1) {
     if (navigator.mediaDevices?.getUserMedia) {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
+                video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } 
             });
             video.srcObject = stream;
             
