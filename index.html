@@ -894,7 +894,7 @@ const CONFIG = {
     gestures: {
         pinchThreshold: 0.04, // 捏合判定阈值
         palmOpenThreshold: 0.3, // 手掌张开判定阈值
-        sensitivity: 6.0 // 手势旋转灵敏度
+        sensitivity: 5.0 // 手势旋转灵敏度
     }
 };
 
@@ -1320,6 +1320,8 @@ waitForTreeComplete();
                 }
                 
                 this.calculatePositions(); // 计算初始形态位置
+				// ✅ 新增：lookAt防抖计数器（每10帧执行一次）
+        		this.lookAtFrameCount = 0;
             }
 
             // 计算该粒子在不同形态下的位置
@@ -1376,8 +1378,18 @@ waitForTreeComplete();
             const invMatrix = new THREE.Matrix4().copy(mainGroup.matrixWorld).invert();
             const camPos = new THREE.Vector3(0, 0, CONFIG.camera.z - 15);
             target = camPos.applyMatrix4(invMatrix);
-            lerpSpeed = 6.0;
-            this.mesh.lookAt(camera.position);
+            lerpSpeed = 3.0;
+            // ✅ 修改2：lookAt防抖 + 旋转阻尼（彻底消除旋转抖动）
+                this.lookAtFrameCount++;
+                if (this.lookAtFrameCount % 10 === 0) {
+                    // 先记录目标朝向
+                    const targetQuaternion = new THREE.Quaternion();
+                    this.mesh.lookAt(camera.position);
+                    targetQuaternion.copy(this.mesh.quaternion);
+                    // 旋转阻尼插值（slerp），让旋转更顺滑，无抖动
+                    this.mesh.quaternion.slerp(targetQuaternion, 0.1);
+                    this.lookAtFrameCount = 0; // 重置计数器
+                }
             s = this.baseScale * 5.0;
         } else {
             target = this.posScatter;
@@ -1900,6 +1912,10 @@ async function predictWebcam() {
     requestAnimationFrame(predictWebcam);
 }
 
+	// 核心：新增 手势关键点低通滤波全局变量（存储上一帧平滑后的坐标）
+window.smoothLandmarks = null;
+window.filterFactor = 0.1; // 滤波系数（越小越平滑，0.1最合适，0.05更平滑但响应变慢）
+
         // 核心手势判断算法
        // 核心手势判断算法（终极修复：Pinch循环切换照片）
 function processGestures(lm) {
@@ -1909,6 +1925,22 @@ function processGestures(lm) {
 
 	if (window.isRewardFrozen) return;
 
+
+	// ========== ✅ 新增：手势关键点低通滤波（核心防抖，过滤识别噪声） ==========
+    if (!window.smoothLandmarks) {
+        // 初始化第一帧：直接复制原始坐标
+        window.smoothLandmarks = JSON.parse(JSON.stringify(lm));
+    } else {
+        // 低通滤波：当前帧 = 上一帧*(1-滤波系数) + 原始帧*滤波系数
+        // 抹平高频微小波动，彻底解决抖动
+        lm.forEach((point, idx) => {
+            window.smoothLandmarks[idx].x = window.smoothLandmarks[idx].x * (1 - window.filterFactor) + point.x * window.filterFactor;
+            window.smoothLandmarks[idx].y = window.smoothLandmarks[idx].y * (1 - window.filterFactor) + point.y * window.filterFactor;
+            window.smoothLandmarks[idx].z = window.smoothLandmarks[idx].z * (1 - window.filterFactor) + point.z * window.filterFactor;
+        });
+    }
+    // 后续所有逻辑都用【平滑后的坐标】，不再用原始 lm
+    const smoothLm = window.smoothLandmarks;
     // ========== 1. 提前初始化索引（只初始化一次，永不重置） ==========
     if (typeof window.photoIndex === 'undefined') {
         window.photoIndex = 0; // 用window全局变量，避免STATE被意外重置
@@ -1929,7 +1961,7 @@ function processGestures(lm) {
         thumbTip.y - indexTip.y,
         thumbTip.z - indexTip.z
     );
-    const pinchThreshold = 0.05;
+    const pinchThreshold = 0.03;
     const isPinching = pinchDistance < pinchThreshold;
     
     // 记录上一帧Pinch状态（全局变量，避免丢失）
