@@ -18,19 +18,19 @@
   "rewardImages": [
     {
       "name": "reward1.webp",
-      "probability": 0.003
+      "probability": 0.005
     },
     {
       "name": "reward2.webp",
-      "probability": 0.003
+      "probability": 0.005
     },
     {
       "name": "reward3.webp",
-      "probability": 0.003
+      "probability": 0.005
     },
     {
       "name": "reward4.webp",
-      "probability": 0.0003
+      "probability": 0.0005
     }
   ]
 }
